@@ -9,50 +9,99 @@
 
 ## About Laravel
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
-
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
-
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
-
+Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects.
+## clear configurations and optimize css
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+php artisan config:clear
+php artisan view:clear
+php artisan cache:clear
+php artisan route:clear
+php artisan optimize:clear
+php artisan optimize
+```
+## extra clear configuration and optimize css in docker profile nginx
+```bash
+docker exec -it marac-php-fpm bash -c "php artisan config:clear && php artisan view:clear && php artisan cache:clear && php artisan route:clear && php artisan optimize:clear && php artisan optimize"
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+### menyatukan semua permission pakai perm
+```bash
+make perm
+```
 
-## Contributing
+## Docker Setup
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### untuk menjalankan nginx dan db
+```bash
+docker compose --profile nginx up -d
+```
+### untuk menjalankan apache dan db
+```bash
+docker compose --profile apache up -d
+```
 
-## Code of Conduct
+### untuk menjalankan mysql
+```bash
+docker exec -it marac-db mysql -u root
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### untuk masuk ke terimal container apache
+```bash
+docker exec -it marac-php-fpm bash
+```
 
-## Security Vulnerabilities
+### untuk solo command
+```bash
+# Jika pakai Nginx
+docker exec -it marac-php-fpm php artisan serve
+docker compose exec php-fpm composer install
+# untuk melihat log seperti php artisan serve
+docker compose logs -f nginx php-fpm
+# Jika pakai Apache
+docker exec -it marac-apache php artisan serve
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### untuk mematikan container
+```bash
+# untuk selesai code
+docker compose down
 
+# untuk rest bentar
+docker compose stop
+
+# untuk reset total dan ganti konfigurasi
+docker compose down -v
+docker compose --profile nginx down -v
+```
+
+### untuk new project laravel
+```bash
+docker compose exec apache composer create-project laravel/laravel:^13.0 .
+# atau
+docker compose exec apache composer create-project laravel/laravel .
+```
+### docker permission
+```bash
+# Masuk ke container PHP dan ubah owner folder ke user web (www-data)
+sudo chown -R $USER:$USER .
+docker exec -it marac-php-fpm chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+docker exec -it marac-php-fpm chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+
+# bash docker
+php artisan storage:link
+chown -R www-data:www-data /var/www/html/public/
+chmod -R 775 /var/www/html/public/
+
+# add theme in filament
+php artisan make:filament-theme
+```
+```bash
+#db import
+docker exec -i <nama_container_mysql> mysql -u <username_db> -p<password_db> <nama_database> < path/ke/file.sql
+
+#db export
+docker exec <nama_container_mysql> mysqldump -u <username_db> -p<password_db> <nama_database> > hasil_export.sql
+
+```
 ## License
-
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
