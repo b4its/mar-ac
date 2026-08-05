@@ -9,6 +9,12 @@ export default defineConfig({
             input: ['resources/css/app.css', 'resources/js/app.js'],
             refresh: true,
             fonts: [
+                bunny('Archivo Black', {
+                    weights: [400],
+                }),
+                bunny('Space Grotesk', {
+                    weights: [400, 500, 700],
+                }),
                 bunny('Instrument Sans', {
                     weights: [400, 500, 600],
                 }),

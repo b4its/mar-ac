@@ -3,7 +3,101 @@
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-display: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+
+    --color-bauhaus-red: #dc2626;
+    --color-bauhaus-red-dark: #b91c1c;
+    --color-bauhaus-yellow: #eff6ff;
+    --color-bauhaus-blue: #2563eb;
+    --color-bauhaus-blue-dark: #1d4ed8;
+    --color-bauhaus-black: #1e293b;
+    --color-bauhaus-ink: #475569;
+    --color-bauhaus-paper: #ffffff;
+    --color-bauhaus-paper-dark: #f8fafc;
+}
+
+@layer base {
+    body {
+        @apply bg-slate-50 text-slate-900 antialiased;
+    }
+
+    html.dark body {
+        @apply bg-slate-950 text-slate-100;
+    }
+
+    [x-cloak] {
+        display: none !important;
+    }
+
+    .dark {
+        --color-bauhaus-blue: #60a5fa;
+        --color-bauhaus-blue-dark: #3b82f6;
+        --color-bauhaus-black: #e2e8f0;
+        --color-bauhaus-ink: #cbd5e1;
+        --color-bauhaus-yellow: #172554;
+        --color-bauhaus-paper: #111827;
+        --color-bauhaus-paper-dark: #1f2937;
+    }
+
+}
+
+@layer components {
+    .bauhaus-grid {
+        background:
+            radial-gradient(circle at top left, rgba(37, 99, 235, 0.14), transparent 36rem),
+            linear-gradient(180deg, #f8fafc 0%, #eef4ff 48%, #f8fafc 100%);
+    }
+
+    .bauhaus-title {
+        @apply font-display font-semibold tracking-tight;
+    }
+
+    .bauhaus-card {
+        @apply rounded-2xl border border-slate-200/80 bg-white text-slate-900 shadow-xl shadow-slate-200/70 dark:border-slate-700/80 dark:bg-slate-900 dark:text-slate-100 dark:shadow-black/30;
+    }
+
+    .bauhaus-btn {
+        @apply inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 px-5 py-2.5 text-sm font-semibold tracking-normal text-slate-800 shadow-sm transition duration-150 hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:text-slate-100;
+    }
+
+    .bauhaus-input {
+        @apply block w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 font-sans text-base text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-bauhaus-blue focus:ring-4 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:ring-blue-950;
+    }
+
+    .bg-bauhaus-yellow {
+        @apply text-blue-900 dark:text-blue-100;
+    }
+
+    .border-bauhaus-black,
+    .divide-bauhaus-black > :not([hidden]) ~ :not([hidden]) {
+        @apply border-slate-200 dark:border-slate-700;
+    }
+
+}
+
+@layer utilities {
+    .dark .bauhaus-grid {
+        background:
+            radial-gradient(circle at top left, rgba(37, 99, 235, 0.22), transparent 34rem),
+            linear-gradient(180deg, #020617 0%, #0f172a 48%, #020617 100%);
+    }
+
+    .dark .bg-bauhaus-blue,
+    .dark .bg-bauhaus-black {
+        background-color: #2563eb;
+        color: #ffffff;
+    }
+
+    .dark .hover\:bg-bauhaus-blue-dark:hover {
+        background-color: #1d4ed8;
+    }
+
+    .dark .bg-white {
+        background-color: #111827;
+    }
 }

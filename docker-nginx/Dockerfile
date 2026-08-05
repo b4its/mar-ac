@@ -5,6 +5,7 @@ RUN apt-get update && apt-get install -y \
     libpng-dev libjpeg-dev libfreetype6-dev libzip-dev \
     libicu-dev \
     zip unzip git curl mariadb-client \
+    chromium fonts-dejavu-core \
     # Tambahkan Node.js & NPM untuk compile Tailwind/Vite
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs
