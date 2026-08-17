@@ -199,6 +199,9 @@ class MaintenanceReportController extends Controller
             $file = $data[$fieldFotoExtra];
             $slotKey = $bagian === 1 ? 'lampiran_tambahan' : 'lampiran_tambahan_2';
             $caption = trim((string) ($data[$fieldCaptionExtra] ?? ''));
+            $originalName = $file->getClientOriginalName();
+            $mimeType = $file->getClientMimeType();
+            $fileSize = $file->getSize();
             $path = PublicReportMedia::store($file, 'perawatan', $report->tanggal_pelaksanaan, $report->asset, $caption ?: 'Lampiran Tambahan', count($storedPaths));
             $storedPaths[] = $path;
 
@@ -207,9 +210,9 @@ class MaintenanceReportController extends Controller
                 'slot_key' => $slotKey,
                 'caption' => $caption,
                 'file_path' => $path,
-                'original_name' => $file->getClientOriginalName(),
-                'mime_type' => $file->getClientMimeType(),
-                'file_size' => $file->getSize(),
+                'original_name' => $originalName,
+                'mime_type' => $mimeType,
+                'file_size' => $fileSize,
                 'sort_order' => count($storedPaths) - 1,
                 'uploaded_by_user_id' => $request->user()->id,
             ]);
