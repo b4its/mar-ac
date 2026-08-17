@@ -6,6 +6,8 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
+        <meta name="description" content="Sistem Informasi Pemeliharaan Aset - Politeknik Negeri Samarinda">
+        <meta name="theme-color" content="#2563eb">
 
         <title>{{ $title ? $title.' — ' : '' }}{{ config('app.name') }}</title>
 
@@ -29,11 +31,13 @@
     <body class="relative flex min-h-screen flex-col overflow-x-hidden bg-slate-50 dark:bg-slate-950">
         <div class="bauhaus-grid absolute inset-0 -z-10"></div>
 
-        <header class="sticky top-0 z-40 border-b border-slate-200 bg-white/90 px-4 py-4 shadow-sm backdrop-blur lg:px-10 dark:border-slate-800 dark:bg-slate-950/90">
+        <header class="sticky top-0 z-40 border-b border-slate-200 bg-white/90 px-4 py-4 shadow-sm backdrop-blur lg:px-10 dark:border-slate-800 dark:bg-slate-950/90" role="banner">
             <div class="mx-auto flex w-full max-w-6xl flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <a href="{{ auth()->check() ? route('welcome') : route('login') }}" class="bauhaus-title flex min-w-0 items-center gap-3 text-xl text-bauhaus-blue lg:text-2xl">
-                <span class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-bauhaus-blue shadow-lg shadow-blue-500/20"><img src="{{ asset('images/logoPolnes.png') }}" alt="Logo Polnes" class="h-8 w-8 object-contain"></span>
-                <span class="truncate">UPA.PP</span>
+            <a href="{{ auth()->check() ? route('welcome') : route('login') }}" class="bauhaus-title group flex min-w-0 items-center gap-3 text-xl text-bauhaus-blue lg:text-2xl" aria-label="UPA.PP - UPA.PP System">
+                <span class="relative inline-flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-bauhaus-blue shadow-lg shadow-blue-500/20 ring-2 ring-white/20 dark:ring-white/10">
+                    <img src="{{ asset('images/logoPolnes.png') }}" alt="Logo Polnes" class="h-8 w-8 object-contain">
+                </span>
+                <span class="truncate font-semibold">UPA.PP</span>
             </a>
 
             <nav class="flex flex-wrap items-center gap-2 md:justify-end">
@@ -42,9 +46,10 @@
                     @if (auth()->user()->hasRole('admin'))
                         <a href="{{ route('filament.admin.pages.dashboard') }}" class="bauhaus-btn flex-1 justify-center bg-bauhaus-blue text-white hover:bg-blue-700 sm:flex-none">Panel Admin</a>
                     @endif
-                    <form method="POST" action="{{ route('logout') }}" id="logout-form">
+                    <form method="POST" action="{{ route('logout') }}" id="logout-form" class="hidden">
                         @csrf
-                        <button type="submit" class="bauhaus-btn bg-white text-slate-700 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">Keluar</button>
+                    </form>
+                    <button type="submit" form="logout-form" class="bauhaus-btn bg-white text-slate-700 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">Keluar</button>
                     </form>
                 @endauth
                 <livewire:theme-switcher />

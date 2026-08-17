@@ -268,10 +268,11 @@
                 const badgeClass = isDisetujui ? 'bg-bauhaus-yellow' : (isDitolak ? 'bg-bauhaus-paper text-red-600' : 'bg-bauhaus-paper');
                 const badgeLabel = isDisetujui ? 'Disetujui' : (isDitolak ? 'Ditolak' : (status === 'revisi' ? 'Revisi' : 'Pending'));
                 
-                // Determine PDF link type based on report.jenis_kerusakan or report.jenis_pekerjaan presence
-                const pdfType = report.jenis_kerusakan !== undefined ? 
-                    (nomorLaporan.includes('KRS') ? 'kerusakan' : nomorLaporan.includes('PRW') ? 'perawatan' : 'perbaikan') : 
-                    'kerusakan';
+                // Determine PDF link type based on report data
+                const NomorLaporan = report.nomor_laporan || '';
+                const pdfType = NomorLaporan.includes('KRS') ? 'kerusakan' : 
+                               (NomorLaporan.includes('PRW') ? 'perawatan' : 
+                                (NomorLaporan.includes('PBP') ? 'perbaikan' : 'kerusakan'));
                 
                 html += `
                     <li style="padding: 1.25rem; border-bottom: 1px solid #000;">

@@ -72,15 +72,20 @@ class LaporanSayaController extends Controller
                 });
             }
             
-            // Search filter
+            // Search filter - only apply columns that exist for each report type
             if (!empty($search)) {
                 $query->where(function ($q) use ($search) {
                     $q->where('nomor_laporan', 'like', "%{$search}%")
-                      ->orWhere('jenis_kerusakan', 'like', "%{$search}%")
-                      ->orWhere('jenis_pekerjaan', 'like', "%{$search}%")
                       ->orWhereHas('asset', function ($q2) use ($search) {
                           $q2->where('nama_alat', 'like', "%{$search}%");
                       });
+                    
+                    // Add specific columns based on report type (only when they exist)
+                    if ($type === 'damage') {
+                        $q->orWhere('jenis_kerusakan', 'like', "%{$search}%");
+                    } elseif ($type === 'repair' || $type === 'maintenance') {
+                        $q->orWhere('jenis_pekerjaan', 'like', "%{$search}%");
+                    }
                 });
             }
             
