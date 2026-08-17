@@ -65,17 +65,18 @@
     </table>
 
     <table class="paper-form">
-        {{-- Header form (sama untuk semua section) --}}
-        @include('pdf.partials.doc-header', [
-            'colspan' => 9,
-            'title' => 'Kartu Laporan<br>Hasil Perawatan',
-            'reportLabel' => 'No. Laporan perawatan :',
-            'reportNumber' => $field('nomor_laporan', $report->nomor_laporan),
-            'logoSource' => $logoSource ?? null,
-        ])
-        
         {{-- Tabel data: setiap alat/mesin = 1 baris lengkap --}}
         @foreach ($sections as $index => $section)
+            @if ($multi || $index === 0)
+                {{-- Header section --}}
+                <tr>
+                    <td colspan="9" class="center" style="background: #f0f0f0; font-weight: bold;">
+                        KARTU LAPORAN HASIL PERAWATAN<br>
+                        No. Laporan perawatan : {{ $report->nomor_laporan }}
+                    </td>
+                </tr>
+            @endif
+            
             <tr>
                 <td colspan="2">Nama Alat / Mesin</td>
                 <td colspan="3">: {{ $section['nama_alat'] ?: '-' }}</td>
@@ -120,52 +121,70 @@
                 <td colspan="2" class="center">Rp {{ number_format($section['biaya_jasa'], 0, ',', '.') }}</td>
             </tr>
             
-            {{-- Garis pemisah antar alat/mesin --}}
+            {{-- Footer tanda tangan per section (kecuali yang terakhir) --}}
             @if ($multi && $index < $sections->count() - 1)
+                <tr class="center signature-space">
+                    <td></td>
+                    <td colspan="2">Mengetahui,</td>
+                    <td colspan="2">Pelaksana</td>
+                    <td colspan="4">Pemeriksa</td>
+                </tr>
+                <tr class="center">
+                    <td>Nama</td>
+                    <td colspan="2">{{ $section['nama_alat'] }}</td>
+                    <td colspan="2">{{ $field('pelaksana_nama', $report->vendor?->nama_vendor ?: $report->pelaporUser?->name) }}</td>
+                    <td colspan="4">{{ $field('pemeriksa_nama', $report->verifikatorUser?->name ?: 'Ka.Sub/Ka.Jur/Ka.Lab/Ka.Beng/Ka.Unit') }}</td>
+                </tr>
+                <tr class="center">
+                    <td>Jabatan</td>
+                    <td colspan="2">Pemilik Aset</td>
+                    <td colspan="2">Teknisi</td>
+                    <td colspan="4">Pemeriksa</td>
+                </tr>
+                <tr class="center">
+                    <td>Tanggal</td>
+                    <td colspan="2">{{ $section['tanggal_pelaksanaan']?->format('d-m-Y') }}</td>
+                    <td colspan="2">{{ now()->format('d-m-Y') }}</td>
+                    <td colspan="4">{{ $section['tanggal_pelaksanaan']?->format('d-m-Y') }}</td>
+                </tr>
+                
+                {{-- Garis pemisah antar alat/mesin --}}
                 <tr class="row-divider">
                     <td colspan="9"></td>
                 </tr>
             @endif
         @endforeach
         
-        {{-- Tanda tangan sekali di akhir --}}
+        {{-- Tanda tangan sekali di akhir (untuk bagian kedua jika ada) --}}
+        @if ($multi)
         <tr class="center">
-            <td></td>
+            <td colspan="9" class="signature-space"></td>
+        </tr>
+        <tr class="center">
             <td colspan="2">Pelaksana</td>
             <td colspan="4">Pemeriksa</td>
             <td colspan="2">Mengetahui</td>
         </tr>
         <tr class="center">
-            <td>Nama</td>
+            <td colspan="2">Nama</td>
             <td colspan="2">{{ $field('pelaksana_nama', $report->vendor?->nama_vendor ?: $report->pelaporUser?->name) }}</td>
             <td colspan="2">{{ $field('pemeriksa_nama', $report->verifikatorUser?->name ?: 'Ka.Sub/Ka.Jur/Ka.Lab/Ka.Beng/Ka.Unit') }}</td>
             <td colspan="2">{{ $report->approverUser?->name ?: 'Teknisi UPA.PP' }}</td>
-            <td colspan="2">{{ $field('mengetahui_nama', 'Ka. UPA.PP') }}</td>
         </tr>
         <tr class="center">
-            <td>Jabatan</td>
+            <td colspan="2">Jabatan</td>
             <td colspan="2">Teknisi</td>
             <td colspan="2">Pemeriksa</td>
             <td colspan="2">UPA.PP</td>
-            <td colspan="2">Pimpinan</td>
         </tr>
         <tr class="center">
-            <td>Tanggal</td>
+            <td colspan="2">Tanggal</td>
             <td colspan="2">{{ $report->tanggal_pelaksanaan?->format('d-m-Y') }}</td>
             <td colspan="2">{{ $report->verified_at?->format('d-m-Y') ?: '-' }}</td>
             <td colspan="2">{{ $report->approved_at?->format('d-m-Y') ?: '-' }}</td>
-            <td colspan="2">{{ $report->approved_at?->format('d-m-Y') ?: '-' }}</td>
         </tr>
-        <tr class="center signature-space">
-            <td>Paraf</td>
-            <td colspan="2"></td>
-            <td colspan="2"></td>
-            <td colspan="2"></td>
-            <td colspan="2"></td>
-        </tr>
+        @endif
     </table>
-    
-    <div class="print-note">Dokumen dicetak otomatis dari Sistem Informasi Pemeliharaan &amp; Perbaikan Aset UPA.PP Politeknik Negeri Samarinda.</div>
 
     {{-- Dokumentasi foto per bagian: halaman terpisah --}}
     @foreach ($sections as $section)
