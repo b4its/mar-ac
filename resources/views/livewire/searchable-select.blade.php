@@ -10,16 +10,18 @@
             type="search"
             wire:model.live.debounce.250ms="search"
             wire:focus="$set('open', true)"
-            placeholder="{{ $placeholder }}"
+            placeholder="{{ $this->locationLocked ? 'Pilih ruangan terlebih dahulu...' : $placeholder }}"
             autocomplete="off"
             class="bauhaus-input pr-11"
             @if ($required) aria-required="true" @endif
+            @if ($this->locationLocked) disabled @endif
         >
         <button
             type="button"
             wire:click="$set('open', {{ $open ? 'false' : 'true' }})"
             class="absolute right-2 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-100"
             aria-label="Buka pilihan"
+            @if ($this->locationLocked) disabled @endif
         >
             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="m6 9 6 6 6-6" />
@@ -29,7 +31,11 @@
 
     @if ($open)
         <div class="absolute z-30 mt-2 w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-200/70 dark:border-slate-700 dark:bg-slate-900 dark:shadow-black/30">
-            @if (! $creating)
+            @if ($this->locationLocked)
+                <div class="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">
+                    Pilih gedung, jurusan, lalu ruangan pada filter lokasi untuk memilih alat.
+                </div>
+            @elseif (! $creating)
                 <div class="max-h-72 overflow-y-auto py-1">
                     @forelse ($this->options as $option)
                         <button
@@ -47,13 +53,14 @@
                     @endforelse
                 </div>
 
-                @if (trim($search) !== '' && ! $this->exactMatch)
-                    <div class="border-t border-slate-200 p-3 dark:border-slate-700">
-                        <button type="button" wire:click="startCreate" class="bauhaus-btn w-full bg-bauhaus-blue px-4 py-2 text-xs text-white hover:bg-bauhaus-blue-dark">
-                            + Tambah {{ $type === 'vendor' ? 'vendor' : 'aset' }} "{{ $search }}"
-                        </button>
-                    </div>
-                @endif
+                @php
+                    $addLabel = trim($search) !== '' && ! $this->exactMatch ? ' "'.$search.'"' : '';
+                @endphp
+                <div class="border-t border-slate-200 p-3 dark:border-slate-700">
+                    <button type="button" wire:click="startCreate" class="bauhaus-btn w-full bg-bauhaus-blue px-4 py-2 text-xs text-white hover:bg-bauhaus-blue-dark">
+                        + Tambah {{ $type === 'vendor' ? 'vendor' : 'aset' }} baru{{ $addLabel }}
+                    </button>
+                </div>
             @else
                 <div class="space-y-3 p-4">
                     <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">
@@ -175,7 +182,9 @@
         </div>
     @endif
 
-    @if ($required && ! $selectedId && trim($search) !== '')
+    @if ($this->locationLocked)
+        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Lengkapi filter lokasi (gedung → jurusan → ruangan) terlebih dahulu untuk memilih alat.</p>
+    @elseif ($required && ! $selectedId && trim($search) !== '')
         <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Pilih data dari daftar atau tambahkan data baru.</p>
     @endif
 </div>

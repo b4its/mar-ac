@@ -65,15 +65,17 @@
                 type="search"
                 wire:model.live.debounce.250ms="searchDepartment"
                 wire:focus="$set('openDepartment', true)"
-                placeholder="Cari jurusan..."
+                placeholder="{{ $this->departmentLocked ? 'Pilih gedung terlebih dahulu...' : 'Cari jurusan...' }}"
                 autocomplete="off"
                 class="bauhaus-input pr-11"
+                @if ($this->departmentLocked) disabled @endif
             >
             <button
                 type="button"
                 wire:click="$set('openDepartment', {{ $openDepartment ? 'false' : 'true' }})"
                 class="absolute right-2 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-100"
                 aria-label="Buka pilihan jurusan"
+                @if ($this->departmentLocked) disabled @endif
             >
                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="m6 9 6 6 6-6" />
@@ -93,7 +95,7 @@
             @endif
         </div>
 
-        @if ($openDepartment)
+        @if ($openDepartment && ! $this->departmentLocked)
             <div class="absolute z-30 mt-2 w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-200/70 dark:border-slate-700 dark:bg-slate-900 dark:shadow-black/30">
                 <div class="max-h-72 overflow-y-auto py-1">
                     @forelse ($this->departmentOptions as $option)
@@ -123,15 +125,17 @@
                 type="search"
                 wire:model.live.debounce.250ms="searchRoom"
                 wire:focus="$set('openRoom', true)"
-                placeholder="Cari ruangan..."
+                placeholder="{{ $this->roomLocked ? ($this->departmentLocked ? 'Pilih gedung terlebih dahulu...' : 'Pilih jurusan terlebih dahulu...') : 'Cari ruangan...' }}"
                 autocomplete="off"
                 class="bauhaus-input pr-11"
+                @if ($this->roomLocked) disabled @endif
             >
             <button
                 type="button"
                 wire:click="$set('openRoom', {{ $openRoom ? 'false' : 'true' }})"
                 class="absolute right-2 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-100"
                 aria-label="Buka pilihan ruangan"
+                @if ($this->roomLocked) disabled @endif
             >
                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="m6 9 6 6 6-6" />
@@ -151,7 +155,7 @@
             @endif
         </div>
 
-        @if ($openRoom)
+        @if ($openRoom && ! $this->roomLocked)
             <div class="absolute z-30 mt-2 w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-200/70 dark:border-slate-700 dark:bg-slate-900 dark:shadow-black/30">
                 <div class="max-h-72 overflow-y-auto py-1">
                     @forelse ($this->roomOptions as $option)

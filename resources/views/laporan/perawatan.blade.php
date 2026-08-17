@@ -14,7 +14,7 @@
 
             {{-- Filter lokasi bercabang: Gedung → Jurusan → Ruangan --}}
             <div class="mb-8 border-b border-bauhaus-black pb-6">
-                <p class="mb-4 font-display text-sm uppercase tracking-widest">Filter Lokasi Aset <span class="text-slate-500">(opsional — mempersempit daftar alat)</span></p>
+                <p class="mb-4 font-display text-sm uppercase tracking-widest">Filter Lokasi Aset <span class="text-slate-500">(wajib — pilih berurutan: gedung → jurusan → ruangan, sebelum memilih alat)</span></p>
                 <livewire:lokasi-filter wire:key="maintenance-lokasi-filter" />
             </div>
 
@@ -47,6 +47,7 @@
                                 placeholder="Cari nama alat, kode alat, atau no. inventaris..."
                                 :selected="old('asset_id') ? (int) old('asset_id') : null"
                                 required
+                                :require-room="true"
                                 wire:key="maintenance-asset-select"
                             />
                             @error('asset_id')<p class="mt-1 text-sm font-semibold text-red-600">{{ $message }}</p>@enderror
@@ -125,6 +126,7 @@
                                 label="Alat / Mesin"
                                 placeholder="Cari nama alat, kode alat, atau no. inventaris..."
                                 :selected="old('asset_id_2') ? (int) old('asset_id_2') : null"
+                                :require-room="true"
                                 wire:key="maintenance-asset-select-2"
                             />
                             @error('asset_id_2')<p class="mt-1 text-sm font-semibold text-red-600">{{ $message }}</p>@enderror

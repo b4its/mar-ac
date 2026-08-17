@@ -46,6 +46,12 @@ class SearchableSelect extends Component
 
     public ?int $filterRoomId = null;
 
+    /**
+     * Saat true (pemilih aset di form perawatan), alat baru dapat dipilih
+     * setelah ruangan dipilih pada filter lokasi (gedung → jurusan → ruangan).
+     */
+    public bool $requireRoom = false;
+
     public string $newName = '';
 
     public string $newCode = '';
@@ -85,6 +91,7 @@ class SearchableSelect extends Component
         ?int $selected = null,
         string $placeholder = 'Cari data...',
         bool $required = false,
+        bool $requireRoom = false,
     ): void {
         $this->type = $type;
         $this->name = $name;
@@ -92,6 +99,7 @@ class SearchableSelect extends Component
         $this->selectedId = $selected;
         $this->placeholder = $placeholder;
         $this->required = $required;
+        $this->requireRoom = $requireRoom;
 
         if ($selected) {
             $record = $this->modelQuery()->find($selected);
@@ -125,6 +133,14 @@ class SearchableSelect extends Component
         $this->filterBuildingId = $buildingId ? (int) $buildingId : null;
         $this->filterDepartmentId = $departmentId ? (int) $departmentId : null;
         $this->filterRoomId = $roomId ? (int) $roomId : null;
+
+        if ($this->requireRoom && ! $this->filterRoomId && $this->selectedId) {
+            $this->selectedId = null;
+            $this->selectedLabel = '';
+            $this->search = '';
+
+            return;
+        }
 
         if ($this->selectedId) {
             $record = $this->modelQuery()->find($this->selectedId);
@@ -218,6 +234,10 @@ class SearchableSelect extends Component
 
     public function getOptionsProperty(): Collection
     {
+        if ($this->type === 'asset' && $this->requireRoom && ! $this->filterRoomId) {
+            return collect();
+        }
+
         $search = trim($this->search);
 
         return $this->modelQuery()
@@ -255,6 +275,11 @@ class SearchableSelect extends Component
         }
 
         return $this->options->contains(fn (array $option): bool => mb_strtolower($option['label']) === $needle);
+    }
+
+    public function getLocationLockedProperty(): bool
+    {
+        return $this->type === 'asset' && $this->requireRoom && ! $this->filterRoomId;
     }
 
     public function getRoomOptionsProperty(): Collection

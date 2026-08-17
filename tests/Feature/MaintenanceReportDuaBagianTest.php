@@ -78,7 +78,9 @@ it('halaman form perawatan menampilkan dua bagian dan filter lokasi', function (
         ->assertSee('Bagian 1')
         ->assertSee('Bagian 2')
         ->assertSee('+ Tambah Bagian')
-        ->assertSee('Kartu Perawatan');
+        ->assertSee('Kartu Perawatan')
+        ->assertSee('Pilih gedung terlebih dahulu')
+        ->assertSee('Lengkapi filter lokasi');
 });
 
 it('laporan perawatan dua bagian menyimpan item dan lampiran terpisah', function () {
@@ -197,6 +199,81 @@ it('clear gedung menghapus seluruh filter lokasi', function () {
         ->assertSet('departmentId', null)
         ->assertSet('roomId', null)
         ->assertDispatched('lokasi-filter-changed', buildingId: null, departmentId: null, roomId: null);
+});
+
+it('jurusan tidak dapat dipilih sebelum gedung dipilih', function () {
+    $this->actingAs($this->teknisi);
+
+    Livewire::test(LokasiFilter::class)
+        ->set('openDepartment', true)
+        ->assertSee('Pilih gedung terlebih dahulu')
+        ->assertDontSee('Teknik Informatika')
+        ->set('openRoom', true)
+        ->assertSee('Pilih gedung terlebih dahulu')
+        ->assertDontSee('Ruang A1');
+});
+
+it('ruangan tidak dapat dipilih sebelum jurusan dipilih', function () {
+    $this->actingAs($this->teknisi);
+
+    Livewire::test(LokasiFilter::class)
+        ->call('selectBuilding', $this->gedungA->id)
+        ->set('openDepartment', true)
+        ->assertSee('Teknik Informatika')
+        ->set('openRoom', true)
+        ->assertSee('Pilih jurusan terlebih dahulu')
+        ->assertDontSee('Ruang A1')
+        ->call('selectDepartment', $this->ti->id)
+        ->set('openRoom', true)
+        ->assertSee('Ruang A1')
+        ->assertDontSee('Ruang B1');
+});
+
+it('alat tidak dapat dicari sebelum ruangan dipilih pada filter lokasi', function () {
+    $this->actingAs($this->teknisi);
+
+    Livewire::test(SearchableSelect::class, [
+        'type' => 'asset',
+        'name' => 'asset_id',
+        'requireRoom' => true,
+    ])
+        ->set('open', true)
+        ->assertSee('Pilih gedung, jurusan, lalu ruangan pada filter lokasi untuk memilih alat.')
+        ->assertDontSee('AC Split 2 PK - AC-1');
+});
+
+it('alat dapat dipilih setelah gedung, jurusan, dan ruangan lengkap', function () {
+    $this->actingAs($this->teknisi);
+
+    Livewire::test(SearchableSelect::class, [
+        'type' => 'asset',
+        'name' => 'asset_id',
+        'requireRoom' => true,
+    ])
+        ->dispatch('lokasi-filter-changed', buildingId: $this->gedungA->id, departmentId: $this->ti->id, roomId: $this->ruangA1->id)
+        ->set('search', 'AC')
+        ->assertSee('AC Split 2 PK - AC-1')
+        ->assertSee('AC Split 1,5 PK - AC-2')
+        ->assertDontSee('AC Cassette 3 PK - AC-3')
+        ->call('selectOption', $this->asset1->id)
+        ->assertSet('selectedId', $this->asset1->id);
+});
+
+it('pilihan alat dibersihkan saat ruangan dihapus pada filter lokasi', function () {
+    $this->actingAs($this->teknisi);
+
+    Livewire::test(SearchableSelect::class, [
+        'type' => 'asset',
+        'name' => 'asset_id',
+        'requireRoom' => true,
+    ])
+        ->dispatch('lokasi-filter-changed', buildingId: $this->gedungA->id, departmentId: $this->ti->id, roomId: $this->ruangA1->id)
+        ->call('selectOption', $this->asset1->id)
+        ->assertSet('selectedId', $this->asset1->id)
+        ->dispatch('lokasi-filter-changed', buildingId: $this->gedungA->id, departmentId: $this->ti->id, roomId: null)
+        ->assertSet('selectedId', null)
+        ->assertSet('selectedLabel', '')
+        ->assertSet('search', '');
 });
 
 it('searchable select aset terfilter oleh event lokasi', function () {

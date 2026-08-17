@@ -134,8 +134,22 @@ class LokasiFilter extends Component
             ]);
     }
 
+    public function getDepartmentLockedProperty(): bool
+    {
+        return ! $this->buildingId;
+    }
+
+    public function getRoomLockedProperty(): bool
+    {
+        return ! $this->buildingId || ! $this->departmentId;
+    }
+
     public function getDepartmentOptionsProperty(): Collection
     {
+        if (! $this->buildingId) {
+            return collect();
+        }
+
         $search = trim($this->searchDepartment);
 
         return Department::query()
@@ -158,6 +172,10 @@ class LokasiFilter extends Component
 
     public function getRoomOptionsProperty(): Collection
     {
+        if (! $this->buildingId || ! $this->departmentId) {
+            return collect();
+        }
+
         $search = trim($this->searchRoom);
 
         return Room::query()
