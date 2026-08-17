@@ -97,13 +97,12 @@
             @if (filled($section['uraian']) && $section['uraian'] !== '-')
                 <tr>
                     <td colspan="7" class="big-space">{{ $section['uraian'] }}</td>
-                    <td colspan="2"></td>
                 </tr>
             @endif
             @if (!empty($section['material']))
                 <tr>
-                    <td colspan="7" class="center" style="background: #f0f0f0; font-weight: bold;">MATERIAL / SUKU CADANG</td>
-                    <td colspan="2"></td>
+                    <td colspan="7"></td>
+                    <td colspan="2" class="center" style="background: #f0f0f0; font-weight: bold;">MATERIAL / SUKU CADANG</td>
                 </tr>
                 <tr>
                     <td colspan="7"></td>
