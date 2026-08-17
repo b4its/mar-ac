@@ -10,53 +10,99 @@
         $asset = $report->asset;
         $print = $report->print_fields ?? [];
         $field = fn (string $key, mixed $fallback = '-') => filled($print[$key] ?? null) ? $print[$key] : (filled($fallback) ? $fallback : '-');
-        $roomName = $field('nama_ruangan', $asset?->room?->nama_ruangan);
-        $location = $field('lokasi_alat', $roomName);
-        $department = $field('jurusan_unit', $field('jurusan', $asset?->department?->nama_jurusan));
         $materialTotal = (float) ($report->biaya ?? 0);
         $serviceTotal = (float) ($report->biaya_jasa ?? 0);
         $attachments = $report->attachments;
+
+        // Bagian pertama disimpan pada kolom utama laporan.
+        $sections = collect([
+            [
+                'bagian' => 1,
+                'nama_alat' => $field('nama_alat', $asset?->nama_alat),
+                'no_inventaris' => $field('no_inventaris', $asset?->no_inventaris),
+                'gedung' => $field('gedung', $asset?->room?->building?->nama_gedung),
+                'kode_alat' => $field('kode_alat', $asset?->kode_alat),
+                'lokasi' => $field('lokasi_alat', $field('nama_ruangan', $asset?->room?->nama_ruangan)),
+                'jurusan' => $field('jurusan_unit', $field('jurusan', $asset?->department?->nama_jurusan)),
+                'uraian' => $report->uraian_pekerjaan ?: $report->jenis_pekerjaan,
+                'material' => $field('material_suku_cadang', ''),
+                'kode_material' => $field('kode_material', '-'),
+                'biaya' => (float) $report->biaya,
+                'biaya_jasa' => (float) $report->biaya_jasa,
+                'attachments' => $attachments->filter(fn ($a) => $a->bagian() === 1)->values(),
+            ],
+        ]);
+
+        // Bagian tambahan (bagian kedua) disimpan pada relasi items.
+        foreach ($report->items as $item) {
+            $sections->push([
+                'bagian' => $item->bagian,
+                'nama_alat' => $item->asset?->nama_alat ?? '-',
+                'no_inventaris' => $item->asset?->no_inventaris ?? '-',
+                'gedung' => $item->asset?->room?->building?->nama_gedung ?? '-',
+                'kode_alat' => $item->asset?->kode_alat ?? '-',
+                'lokasi' => $item->asset?->room?->nama_ruangan ?? '-',
+                'jurusan' => $item->asset?->department?->nama_jurusan ?? '-',
+                'uraian' => $item->uraian_pekerjaan ?: $item->jenis_pekerjaan,
+                'material' => '',
+                'kode_material' => '-',
+                'biaya' => (float) $item->biaya,
+                'biaya_jasa' => (float) $item->biaya_jasa,
+                'attachments' => $attachments->filter(fn ($a) => $a->bagian() === $item->bagian)->values(),
+            ]);
+        }
+
+        $multi = $sections->count() > 1;
     @endphp
 
+    <table class="doc-meta">
+        <tr>
+            <td class="left"><b>Kartu Laporan Hasil Perawatan</b></td>
+            <td class="right"><b>TANGGAL BERLAKU</b> : {{ $field('tanggal_berlaku', '24 Januari 2024') }}<br><b>KODE DOKUMEN</b> : {{ $field('kode_dokumen', 'FM-Polnes-11-12-11/R3') }}</td>
+        </tr>
+    </table>
+
     <table class="paper-form">
-        <tr>
-            <td colspan="6"><b>Kartu Laporan Hasil Perawatan</b></td>
-            <td colspan="3"><b>TANGGAL BERLAKU</b> : {{ $field('tanggal_berlaku', '24 Januari 2024') }}<br><b>KODE DOKUMEN</b> : {{ $field('kode_dokumen', 'FM-Polnes-11-12-11/R3') }}</td>
-        </tr>
-        <tr>
-            <td colspan="2" class="brand">
-                Politeknik Negeri Samarinda<br>
-                <span class="brand-logo">UPA.PP</span>
-            </td>
-            <td colspan="5" class="doc-title">Kartu Laporan<br>Hasil Perawatan</td>
-            <td colspan="2">No. Laporan perawatan:<br><b>{{ $field('nomor_laporan', $report->nomor_laporan) }}</b></td>
-        </tr>
-        <tr>
-            <td colspan="2">Nama Alat / Mesin</td>
-            <td colspan="3">: {{ $field('nama_alat', $asset?->nama_alat) }}</td>
-            <td>Gedung</td>
-            <td colspan="3">: {{ $field('gedung', $asset?->room?->building?->nama_gedung) }}</td>
-        </tr>
-        <tr>
-            <td colspan="2">No. Inventaris</td>
-            <td colspan="3">: {{ $field('no_inventaris', $asset?->no_inventaris) }}</td>
-            <td>Kode Alat</td>
-            <td colspan="3">: {{ $field('kode_alat', $asset?->kode_alat) }}</td>
-        </tr>
-        <tr>
-            <td colspan="2">Lokasi Alat</td>
-            <td colspan="3">: {{ $location }}</td>
-            <td>Jurusan/Unit</td>
-            <td colspan="3">: {{ $department }}</td>
-        </tr>
-        <tr>
-            <td colspan="7" class="big-space">{{ $report->uraian_pekerjaan ?: $report->jenis_pekerjaan }}</td>
-            <td colspan="2" class="center">Material / Suku Cadang<br>{{ $field('material_suku_cadang', '') }}<br>Kode: {{ $field('kode_material', '-') }}<br>Harga (Rp.)<br>Rp {{ number_format($materialTotal, 0, ',', '.') }}</td>
-        </tr>
-        <tr>
-            <td colspan="7" class="right">Biaya</td>
-            <td colspan="2" class="center">Rp {{ number_format($serviceTotal, 0, ',', '.') }}</td>
-        </tr>
+        @include('pdf.partials.doc-header', [
+            'colspan' => 9,
+            'title' => 'Kartu Laporan<br>Hasil Perawatan',
+            'reportLabel' => 'No. Laporan perawatan :',
+            'reportNumber' => $field('nomor_laporan', $report->nomor_laporan),
+            'logoSource' => $logoSource ?? null,
+        ])
+        @foreach ($sections as $index => $section)
+            @if ($multi)
+                <tr class="section-title">
+                    <td colspan="9">Bagian {{ $section['bagian'] }}</td>
+                </tr>
+            @endif
+            <tr>
+                <td colspan="2">Nama Alat / Mesin</td>
+                <td colspan="3">: {{ $section['nama_alat'] ?: '-' }}</td>
+                <td>Gedung</td>
+                <td colspan="3">: {{ $section['gedung'] ?: '-' }}</td>
+            </tr>
+            <tr>
+                <td colspan="2">No. Inventaris</td>
+                <td colspan="3">: {{ $section['no_inventaris'] ?: '-' }}</td>
+                <td>Kode Alat</td>
+                <td colspan="3">: {{ $section['kode_alat'] ?: '-' }}</td>
+            </tr>
+            <tr>
+                <td colspan="2">Lokasi Alat</td>
+                <td colspan="3">: {{ $section['lokasi'] ?: '-' }}</td>
+                <td>Jurusan/Unit</td>
+                <td colspan="3">: {{ $section['jurusan'] ?: '-' }}</td>
+            </tr>
+            <tr>
+                <td colspan="7" class="big-space{{ $multi ? ' compact' : '' }}">{{ $section['uraian'] ?: '-' }}</td>
+                <td colspan="2" class="center">Material / Suku Cadang<br>{{ $section['material'] }}<br>Kode: {{ $section['kode_material'] }}<br>Harga (Rp.)<br>Rp {{ number_format($section['biaya'], 0, ',', '.') }}</td>
+            </tr>
+            <tr>
+                <td colspan="7" class="right">Biaya</td>
+                <td colspan="2" class="center">Rp {{ number_format($section['biaya_jasa'], 0, ',', '.') }}</td>
+            </tr>
+        @endforeach
         <tr class="center">
             <td></td>
             <td colspan="2">Pelaksana</td>
@@ -84,7 +130,7 @@
             <td colspan="2">{{ $report->approved_at?->format('d-m-Y') ?: '-' }}</td>
             <td colspan="2">{{ $report->approved_at?->format('d-m-Y') ?: '-' }}</td>
         </tr>
-        <tr class="center signature-space">
+        <tr class="center signature-space{{ $multi ? ' compact' : '' }}">
             <td>Paraf</td>
             <td colspan="2"></td>
             <td colspan="2"></td>
@@ -95,31 +141,39 @@
 
     <div class="print-note">Dokumen dicetak otomatis dari Sistem Informasi Pemeliharaan &amp; Perbaikan Aset UPA.PP Politeknik Negeri Samarinda.</div>
 
-    @if ($attachments->isNotEmpty())
-        <div class="attachment-page">
-            <div class="attachment-header">
-                <div class="unit">Politeknik Negeri Samarinda<br>Unit Penunjang Akademik Perawatan dan Perbaikan</div>
-                <div class="address">Jalan Dr. Ciptomangunkusumo Kampus Gunung Panjang Samarinda 75131</div>
+    {{-- Dokumentasi foto per bagian: halaman terpisah untuk tiap bagian --}}
+    @foreach ($sections as $section)
+        @if ($section['attachments']->isNotEmpty())
+            <div class="attachment-page">
+                <div class="attachment-header">
+                    <div class="unit">Politeknik Negeri Samarinda<br>Unit Penunjang Akademik Perawatan dan Perbaikan</div>
+                    <div class="address">Jalan Dr. Ciptomangunkusumo Kampus Gunung Panjang Samarinda 75131</div>
+                </div>
+                <div class="attachment-title">Kegiatan Perawatan AC Tahun {{ $report->tanggal_pelaksanaan?->format('Y') ?: date('Y') }}{{ $multi ? ' — Bagian '.$section['bagian'] : '' }}</div>
+                <div class="attachment-subtitle">Unit Kerja Pengguna AC : {{ $section['gedung'] ?: '-' }}</div>
+                <div class="attachment-location">Lokasi : {{ $section['lokasi'] ?: '-' }}</div>
+                <table class="attachment-grid">
+                    @foreach ($section['attachments']->chunk(2) as $row)
+                        <tr>
+                            @foreach ($row as $attachment)
+                                <td>
+                                    @php($imageSource = $storageUrl($attachment))
+                                    @if ($imageSource)
+                                        <img src="{{ $imageSource }}" alt="{{ $attachment->caption }}">
+                                    @else
+                                        <div class="caption">Foto tidak tersedia</div>
+                                    @endif
+                                    <div class="caption">{{ $attachment->caption ?: \App\Models\ReportAttachment::slotLabel($attachment->slot_key) }}</div>
+                                </td>
+                            @endforeach
+                            @if ($row->count() === 1)
+                                <td></td>
+                            @endif
+                        </tr>
+                    @endforeach
+                </table>
             </div>
-            <div class="attachment-title">Kegiatan Perawatan AC Tahun {{ $report->tanggal_pelaksanaan?->format('Y') ?: date('Y') }}</div>
-            <div class="attachment-subtitle">Unit Kerja Pengguna AC : {{ $field('gedung', $asset?->room?->building?->nama_gedung) }}</div>
-            <div class="attachment-location">Lokasi : {{ $location }}</div>
-            <table class="attachment-grid">
-                @foreach ($attachments->chunk(2) as $row)
-                    <tr>
-                        @foreach ($row as $attachment)
-                            <td>
-                                <img src="{{ $storageUrl($attachment) }}" alt="{{ $attachment->caption }}">
-                                <div class="caption">{{ $attachment->caption ?: \App\Models\ReportAttachment::slotLabel($attachment->slot_key) }}</div>
-                            </td>
-                        @endforeach
-                        @if ($row->count() === 1)
-                            <td></td>
-                        @endif
-                    </tr>
-                @endforeach
-            </table>
-        </div>
-    @endif
+        @endif
+    @endforeach
 </body>
 </html>

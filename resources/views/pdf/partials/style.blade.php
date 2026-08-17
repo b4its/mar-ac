@@ -6,10 +6,13 @@
         color: #000;
         line-height: 1.4;
     }
-    .kop { text-align: center; margin-bottom: 4px; }
-    .kop .instansi { font-size: 13pt; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
-    .kop .institusi { font-size: 11pt; font-weight: bold; text-transform: uppercase; }
-    .kop .alamat { font-size: 8.5pt; }
+    .kop-table { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
+    .kop-logo-cell { width: 100pt; text-align: center; vertical-align: middle; padding-right: 8pt; }
+    .kop-logo { height: 45pt; max-width: 100pt; object-fit: contain; display: inline-block; }
+    .kop-text-cell { text-align: center; vertical-align: middle; }
+    .kop-text-cell .instansi { font-size: 13pt; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+    .kop-text-cell .institusi { font-size: 11pt; font-weight: bold; text-transform: uppercase; }
+    .kop-text-cell .alamat { font-size: 8.5pt; }
     .garis { border-bottom: 2.5px solid #000; margin: 4px 0 10px; }
     .garis-tipis { border-bottom: 1px solid #000; margin-bottom: 6px; }
     .judul-form {
@@ -50,11 +53,29 @@
     .paper-form .right { text-align: right; }
     .paper-form .muted { color: #333; font-size: 9pt; }
     .paper-form .big-space { height: 82px; }
+    .paper-form .big-space.compact { height: 38px; }
     .paper-form .signature-space { height: 48px; }
+    .paper-form .signature-space.compact { height: 22px; }
     .paper-form .narrow { width: 18%; }
     .paper-form .check-cell { line-height: 1.9; }
     .paper-form .brand { text-align: center; font-weight: bold; }
-    .paper-form .brand-logo { font-size: 16pt; font-weight: bold; color: #207a3a; }
+    .paper-form .brand-logo { height: 30pt; max-width: 100%; object-fit: contain; display: block; margin: 0 auto; }
+    .doc-meta { width: 100%; border-collapse: collapse; margin: 0 0 2px; }
+    .doc-meta td { padding: 0 2px; vertical-align: top; }
+    .doc-meta .left { text-align: left; font-size: 11pt; }
+    .doc-meta .right { text-align: right; font-size: 9pt; }
+    .paper-form .doc-header-cell { padding: 0; }
+    .doc-header-inner { width: 100%; border-collapse: collapse; }
+    .doc-header-inner td { border: none; vertical-align: middle; }
+    .doc-header-inner .doc-header-left { width: 27%; text-align: center; padding: 5pt 3pt; }
+    .doc-header-inner .doc-header-left .instansi { font-weight: bold; font-size: 10pt; text-transform: uppercase; }
+    .doc-header-inner .doc-header-left .brand-logo { height: 34pt; max-width: 55pt; margin: 1pt auto; }
+    .doc-header-inner .doc-header-left .unit { font-weight: bold; font-size: 10pt; text-transform: uppercase; }
+    .doc-header-inner .doc-header-center { width: 46%; text-align: center; padding: 5pt 3pt; }
+    .doc-header-inner .doc-header-center .doc-title { font-size: 15pt; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; line-height: 1.2; }
+    .doc-header-inner .doc-header-right { width: 27%; text-align: left; padding: 5pt 6pt; font-size: 9.5pt; vertical-align: top; }
+    .doc-header-inner .doc-header-right .lbl { font-weight: bold; }
+    .doc-header-inner .doc-header-right .no { font-weight: bold; }
     .print-note { font-size: 9pt; margin-top: 8px; font-style: italic; }
     .attachment-page { page-break-before: always; }
     .attachment-header { text-align: center; margin-bottom: 10px; }

@@ -232,3 +232,46 @@ it('searchable select aset membersihkan pilihan yang tidak cocok dengan filter',
         ->assertSet('selectedLabel', '')
         ->assertSet('search', '');
 });
+
+it('pdf perawatan dua bagian dapat dirender', function () {
+    $this->actingAs($this->teknisi);
+
+    $this->post(route('laporan.perawatan.store'), [
+        'asset_id' => $this->asset1->id,
+        'jenis_pekerjaan' => 'Cleaning AC 1',
+        'tanggal_pelaksanaan' => now()->toDateString(),
+        'biaya' => '100000',
+        'biaya_jasa' => '50000',
+        'foto_indoor' => makeTestImage('i1'),
+        'foto_outdoor' => makeTestImage('o1'),
+        'foto_kartu' => makeTestImage('k1'),
+        'asset_id_2' => $this->asset2->id,
+        'jenis_pekerjaan_2' => 'Cleaning AC 2',
+        'tanggal_pelaksanaan_2' => now()->toDateString(),
+        'biaya_2' => '200000',
+        'biaya_jasa_2' => '75000',
+        'foto_indoor_2' => makeTestImage('i2'),
+        'foto_outdoor_2' => makeTestImage('o2'),
+        'foto_kartu_2' => makeTestImage('k2'),
+    ])->assertRedirect();
+
+    $report = MaintenanceReport::latest('id')->first();
+
+    $html = view('pdf.maintenance-report', [
+        'report' => $report->load(['asset.room.building', 'asset.department', 'items.asset.room.building', 'items.asset.department', 'attachments']),
+        'storageUrl' => fn () => '',
+        'logoSource' => '',
+    ])->render();
+
+    expect($html)
+        ->toContain('Bagian 1')
+        ->toContain('Bagian 2')
+        ->toContain('Pencucian AC Indoor (Bagian 2)')
+        ->toContain('Cleaning AC 1')
+        ->toContain('Cleaning AC 2');
+
+    $this->get(route('laporan.pdf.perawatan', $report))->assertOk();
+    $this->get(route('laporan.pdf.perawatan.file', [$report, 'download' => 1]))
+        ->assertOk()
+        ->assertDownload();
+});
