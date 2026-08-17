@@ -36,8 +36,8 @@
                     <select id="departmentSelect" name="department_id" class="rounded border border-bauhaus-black px-3 py-2 text-sm focus:border-bauhaus-blue focus:outline-none focus:ring-1 focus:ring-bauhaus-blue">
                         <option value="">Semua Jurusan</option>
                         @foreach($departments as $dept)
-                            <option value="{{ $dept->id }}" data-building="{{ $dept->building_id ?? '' }}" {{ request('department_id') == $dept->id ? 'selected' : '' }}>
-                                {{ $dept->nama_jurusan }}
+                            <option value="{{ $dept->id }}" {{ request('department_id') == $dept->id ? 'selected' : '' }}>
+                                {{ $dept->nama_jurusan }} - {{ $dept->building?->nama_gedung ?? 'Tidak diketahui' }}
                             </option>
                         @endforeach
                     </select>
@@ -46,8 +46,8 @@
                     <select id="roomSelect" name="room_id" class="rounded border border-bauhaus-black px-3 py-2 text-sm focus:border-bauhaus-blue focus:outline-none focus:ring-1 focus:ring-bauhaus-blue">
                         <option value="">Semua Ruangan</option>
                         @foreach($rooms as $room)
-                            <option value="{{ $room->id }}" data-department="{{ $room->department_id ?? '' }}" {{ request('room_id') == $room->id ? 'selected' : '' }}>
-                                {{ $room->nama_ruangan }}
+                            <option value="{{ $room->id }}" {{ request('room_id') == $room->id ? 'selected' : '' }}>
+                                {{ $room->nama_ruangan }} - {{ $room->department?->nama_jurusan ?? 'Tidak diketahui' }}
                             </option>
                         @endforeach
                     </select>
@@ -335,30 +335,8 @@
             const departmentSelect = document.getElementById('departmentSelect');
             const roomSelect = document.getElementById('roomSelect');
             
-            buildingSelect?.addEventListener('change', function() {
-                const buildingId = this.value;
-                Array.from(departmentSelect?.options || []).forEach(opt => {
-                    if (opt.dataset.building && opt.dataset.building !== buildingId) {
-                        opt.style.display = 'none';
-                    } else {
-                        opt.style.display = 'block';
-                    }
-                });
-                departmentSelect.value = '';
-                roomSelect.value = '';
-            });
-            
-            departmentSelect?.addEventListener('change', function() {
-                const deptId = this.value;
-                Array.from(roomSelect?.options || []).forEach(opt => {
-                    if (opt.dataset.department && opt.dataset.department !== deptId) {
-                        opt.style.display = 'none';
-                    } else {
-                        opt.style.display = 'block';
-                    }
-                });
-                roomSelect.value = '';
-            });
+            // Note: Building filter is currently a simple dropdown without cascade filtering
+            // due to database schema constraints. All options are always visible.
         }
     </script>
 </x-bauhaus.layout>
