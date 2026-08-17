@@ -50,31 +50,54 @@
                     <div class="grid gap-6 md:grid-cols-2">
                         @php
                             $sections = [
-                                ['key' => 'section1_indoor', 'name' => 'foto_indoor', 'caption' => 'caption_indoor', 'id' => 'foto_indoor_1', 'preview' => 'preview_section1_indoor', 'img_id' => 'img_section1_indoor', 'title' => 'Pencucian AC Indoor *', 'placeholder' => 'Kondisi sebelum cleaning...'],
-                                ['key' => 'section1_outdoor', 'name' => 'foto_outdoor', 'caption' => 'caption_outdoor', 'id' => 'foto_outdoor_1', 'preview' => 'preview_section1_outdoor', 'img_id' => 'img_section1_outdoor', 'title' => 'Pencucian AC Outdoor *', 'placeholder' => 'Outdoor unit bersih...'],
-                                ['key' => 'section1_kartu', 'name' => 'foto_kartu', 'caption' => 'caption_kartu', 'id' => 'foto_kartu_1', 'preview' => 'preview_section1_kartu', 'img_id' => 'img_section1_kartu', 'title' => 'Kartu Perawatan *', 'placeholder' => 'Kartu maintenance terisi...'],
-                                ['key' => 'section1_extra', 'name' => 'foto_extra', 'caption' => 'caption_extra', 'id' => 'foto_extra_1', 'preview' => 'preview_section1_extra', 'img_id' => 'img_section1_extra', 'title' => 'Lampiran Tambahan', 'placeholder' => 'Lampiran tambahan'],
+                                ['key' => 'section1_indoor', 'name' => 'foto_indoor', 'caption' => 'caption_indoor', 'id' => 'foto_indoor_1', 'preview_class' => 'preview_section1_indoor', 'img_id' => 'img_section1_indoor', 'title' => 'Pencucian AC Indoor *', 'placeholder' => 'Kondisi sebelum cleaning...'],
+                                ['key' => 'section1_outdoor', 'name' => 'foto_outdoor', 'caption' => 'caption_outdoor', 'id' => 'foto_outdoor_1', 'preview_class' => 'preview_section1_outdoor', 'img_id' => 'img_section1_outdoor', 'title' => 'Pencucian AC Outdoor *', 'placeholder' => 'Outdoor unit bersih...'],
+                                ['key' => 'section1_kartu', 'name' => 'foto_kartu', 'caption' => 'caption_kartu', 'id' => 'foto_kartu_1', 'preview_class' => 'preview_section1_kartu', 'img_id' => 'img_section1_kartu', 'title' => 'Kartu Perawatan *', 'placeholder' => 'Kartu maintenance terisi...'],
+                                ['key' => 'section1_extra', 'name' => 'foto_extra', 'caption' => 'caption_extra', 'id' => 'foto_extra_1', 'preview_class' => 'preview_section1_extra', 'img_id' => 'img_section1_extra', 'title' => 'Lampiran Tambahan', 'placeholder' => 'Lampiran tambahan'],
                             ];
                         @endphp
 
                         @foreach($sections as $section)
-                            <div class="border-2 border-dashed border-slate-300 rounded-xl p-4 hover:border-bauhaus-blue transition-colors bg-slate-50 dark:bg-slate-900 dark:border-slate-700 space-y-3" style="cursor: pointer;" onclick="document.getElementById('{{ $section['id'] }}').click()">
+                            <div class="upload-container border-2 border-dashed border-slate-300 rounded-xl p-4 hover:border-bauhaus-blue transition-colors bg-slate-50 dark:bg-slate-900 dark:border-slate-700 space-y-3" style="cursor: pointer;" onclick="triggerFileClick('{{ $section['id'] }}')">
                                 <label for="{{ $section['id'] }}" class="block font-display text-xs uppercase tracking-widest mb-2 cursor-pointer hover:text-bauhaus-blue">{{ $section['title'] }}</label>
                                 
-                                <input type="file" id="{{ $section['id'] }}" name="{{ $section['name'] }}" accept="image/*" {{ in_array($section['key'], ['section1_indoor','section1_outdoor','section1_kartu']) ? 'required' : '' }} class="hidden" onchange="handlePhotoUpload(this, '{{ $section['key'] }}')">
+                                <input type="file" 
+                                       id="{{ $section['id'] }}" 
+                                       name="{{ $section['name'] }}" 
+                                       accept="image/*" 
+                                       {{ in_array($section['key'], ['section1_indoor','section1_outdoor','section1_kartu']) ? 'required' : '' }} 
+                                       class="hidden" 
+                                       onchange="handlePhotoUpload(this, '{{ $section['key'] }}', '{{ $section['preview_class'] }},{{ $section['img_id'] }},remove_{{ $section['key'] }}}')" 
+                                       data-upload-index="{{ $section['key'] }}">
                                 
-                                <div id="{{ $section['preview'] }}" class="border-2 border-dashed border-slate-200 rounded-lg p-6 text-center min-h-[150px] flex flex-col items-center justify-center">
-                                    <svg class="h-12 w-12 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <!-- Preview Placeholder -->
+                                <div id="{{ $section['preview_class'] }}" class="upload-placeholder border-2 border-dashed border-slate-200 rounded-lg p-6 text-center min-h-[150px] flex flex-col items-center justify-center transition-all group-hover:bg-blue-50">
+                                    <svg class="h-12 w-12 text-slate-400 group-hover:text-bauhaus-blue transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                                     </svg>
-                                    <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">Klik untuk upload foto</p>
+                                    <p class="mt-2 text-sm font-medium text-slate-500 dark:text-slate-400 group-hover:text-bauhaus-blue transition-colors">Klik untuk upload foto</p>
                                 </div>
                                 
-                                <img id="{{ $section['img_id'] }}" src="" alt="" class="hidden mx-auto h-40 object-cover rounded-lg border border-slate-200 dark:border-slate-700" />
+                                <!-- Image Preview -->
+                                <img id="{{ $section['img_id'] }}" src="" alt="" class="hidden mx-auto h-40 object-cover rounded-lg border border-slate-200 dark:border-slate-700 shadow-md" />
                                 
-                                <input type="text" name="{{ $section['caption'] }}" placeholder="Caption (misal: {{ $section['placeholder'] }})" class="bauhaus-input mt-2 text-sm w-full" onblur="updateImageAlt(this)">
+                                <!-- Caption Input -->
+                                <input type="text" 
+                                       name="{{ $section['caption'] }}" 
+                                       placeholder="Caption (misal: {{ $section['placeholder'] }})" 
+                                       class="bauhaus-input mt-2 text-sm w-full" 
+                                       onblur="updateImageAlt(this, '{{ $section['img_id'] }}')">
                                 
-                                <button type="button" id="remove_{{ $section['key'] }}" onclick="removePhoto('{{ $section['key'] }}')" class="hidden mt-2 w-full bg-red-50 text-red-700 px-3 py-2 text-xs hover:bg-red-100 dark:bg-red-950 dark:text-red-300 dark:hover:bg-red-900 rounded-lg transition-colors">Hapus Foto</button>
+                                <!-- Remove Button -->
+                                <button type="button" 
+                                        id="remove_{{ $section['key'] }}" 
+                                        onclick="removePhoto('{{ $section['key'] }}', '{{ $section['preview_class'] }}')" 
+                                        class="hidden mt-2 w-full bg-red-50 text-red-700 px-3 py-2 text-xs hover:bg-red-100 dark:bg-red-950 dark:text-red-300 dark:hover:bg-red-900 rounded-lg transition-colors flex items-center justify-center gap-2">
+                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                    Hapus Foto
+                                </button>
                             </div>
                             @error($section['name'])<p class="mt-1 text-sm font-semibold text-red-600">{{ $message }}</p>@enderror
                         @endforeach
@@ -121,31 +144,43 @@
                     <div class="grid gap-6 md:grid-cols-2">
                         @php
                             $sections2 = [
-                                ['key' => 'section2_indoor', 'name' => 'foto_indoor_2', 'caption' => 'caption_indoor_2', 'id' => 'foto_indoor_2', 'preview' => 'preview_section2_indoor', 'img_id' => 'img_section2_indoor', 'title' => 'Pencucian AC Indoor *', 'placeholder' => 'Kondisi sebelum cleaning...', 'required' => 'required_with="asset_id_2"'],
-                                ['key' => 'section2_outdoor', 'name' => 'foto_outdoor_2', 'caption' => 'caption_outdoor_2', 'id' => 'foto_outdoor_2', 'preview' => 'preview_section2_outdoor', 'img_id' => 'img_section2_outdoor', 'title' => 'Pencucian AC Outdoor *', 'placeholder' => 'Outdoor unit bersih...', 'required' => 'required_with="asset_id_2"'],
-                                ['key' => 'section2_kartu', 'name' => 'foto_kartu_2', 'caption' => 'caption_kartu_2', 'id' => 'foto_kartu_2', 'preview' => 'preview_section2_kartu', 'img_id' => 'img_section2_kartu', 'title' => 'Kartu Perawatan *', 'placeholder' => 'Kartu maintenance terisi...', 'required' => 'required_with="asset_id_2"'],
-                                ['key' => 'section2_extra', 'name' => 'foto_extra_2', 'caption' => 'caption_extra_2', 'id' => 'foto_extra_2', 'preview' => 'preview_section2_extra', 'img_id' => 'img_section2_extra', 'title' => 'Lampiran Tambahan', 'placeholder' => 'Lampiran tambahan', 'required' => ''],
+                                ['key' => 'section2_indoor', 'name' => 'foto_indoor_2', 'caption' => 'caption_indoor_2', 'id' => 'foto_indoor_2', 'preview_class' => 'preview_section2_indoor', 'img_id' => 'img_section2_indoor', 'title' => 'Pencucian AC Indoor *', 'placeholder' => 'Kondisi sebelum cleaning...', 'required' => 'required_with="asset_id_2"'],
+                                ['key' => 'section2_outdoor', 'name' => 'foto_outdoor_2', 'caption' => 'caption_outdoor_2', 'id' => 'foto_outdoor_2', 'preview_class' => 'preview_section2_outdoor', 'img_id' => 'img_section2_outdoor', 'title' => 'Pencucian AC Outdoor *', 'placeholder' => 'Outdoor unit bersih...', 'required' => 'required_with="asset_id_2"'],
+                                ['key' => 'section2_kartu', 'name' => 'foto_kartu_2', 'caption' => 'caption_kartu_2', 'id' => 'foto_kartu_2', 'preview_class' => 'preview_section2_kartu', 'img_id' => 'img_section2_kartu', 'title' => 'Kartu Perawatan *', 'placeholder' => 'Kartu maintenance terisi...', 'required' => 'required_with="asset_id_2"'],
+                                ['key' => 'section2_extra', 'name' => 'foto_extra_2', 'caption' => 'caption_extra_2', 'id' => 'foto_extra_2', 'preview_class' => 'preview_section2_extra', 'img_id' => 'img_section2_extra', 'title' => 'Lampiran Tambahan', 'placeholder' => 'Lampiran tambahan', 'required' => ''],
                             ];
                         @endphp
 
                         @foreach($sections2 as $section)
-                            <div class="border-2 border-dashed border-slate-300 rounded-xl p-4 hover:border-bauhaus-blue transition-colors bg-slate-50 dark:bg-slate-900 dark:border-slate-700 space-y-3" style="cursor: pointer;" onclick="document.getElementById('{{ $section['id'] }}').click()">
+                            <div class="upload-container border-2 border-dashed border-slate-300 rounded-xl p-4 hover:border-bauhaus-blue transition-colors bg-slate-50 dark:bg-slate-900 dark:border-slate-700 space-y-3" style="cursor: pointer;" onclick="triggerFileClick('{{ $section['id'] }}')">
                                 <label for="{{ $section['id'] }}" class="block font-display text-xs uppercase tracking-widest mb-2 cursor-pointer hover:text-bauhaus-blue">{{ $section['title'] }}</label>
                                 
-                                <input type="file" id="{{ $section['id'] }}" name="{{ $section['name'] }}" accept="image/*" {{ !empty($section['required']) ? $section['required'] : '' }} class="hidden" onchange="handlePhotoUpload(this, '{{ $section['key'] }}')">
+                                <input type="file" 
+                                       id="{{ $section['id'] }}" 
+                                       name="{{ $section['name'] }}" 
+                                       accept="image/*" 
+                                       {{ !empty($section['required']) ? $section['required'] : '' }} 
+                                       class="hidden" 
+                                       onchange="handlePhotoUpload(this, '{{ $section['key'] }}', '{{ $section['preview_class'] }},{{ $section['img_id'] }},remove_{{ $section['key'] }}}')" 
+                                       data-upload-index="{{ $section['key'] }}">
                                 
-                                <div id="{{ $section['preview'] }}" class="border-2 border-dashed border-slate-200 rounded-lg p-6 text-center min-h-[150px] flex flex-col items-center justify-center">
-                                    <svg class="h-12 w-12 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <div id="{{ $section['preview_class'] }}" class="upload-placeholder border-2 border-dashed border-slate-200 rounded-lg p-6 text-center min-h-[150px] flex flex-col items-center justify-center transition-all group-hover:bg-blue-50">
+                                    <svg class="h-12 w-12 text-slate-400 group-hover:text-bauhaus-blue transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                                     </svg>
-                                    <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">Klik untuk upload foto</p>
+                                    <p class="mt-2 text-sm font-medium text-slate-500 dark:text-slate-400 group-hover:text-bauhaus-blue transition-colors">Klik untuk upload foto</p>
                                 </div>
                                 
-                                <img id="{{ $section['img_id'] }}" src="" alt="" class="hidden mx-auto h-40 object-cover rounded-lg border border-slate-200 dark:border-slate-700" />
+                                <img id="{{ $section['img_id'] }}" src="" alt="" class="hidden mx-auto h-40 object-cover rounded-lg border border-slate-200 dark:border-slate-700 shadow-md" />
                                 
-                                <input type="text" name="{{ $section['caption'] }}" placeholder="Caption (jika ada)" class="bauhaus-input mt-2 text-sm w-full" onblur="updateImageAlt(this)">
+                                <input type="text" name="{{ $section['caption'] }}" placeholder="Caption (jika ada)" class="bauhaus-input mt-2 text-sm w-full" onblur="updateImageAlt(this, '{{ $section['img_id'] }}')">
                                 
-                                <button type="button" id="remove_{{ $section['key'] }}" onclick="removePhoto('{{ $section['key'] }}')" class="hidden mt-2 w-full bg-red-50 text-red-700 px-3 py-2 text-xs hover:bg-red-100 dark:bg-red-950 dark:text-red-300 dark:hover:bg-red-900 rounded-lg transition-colors">Hapus Foto</button>
+                                <button type="button" id="remove_{{ $section['key'] }}" onclick="removePhoto('{{ $section['key'] }}', '{{ $section['preview_class'] }}')" class="hidden mt-2 w-full bg-red-50 text-red-700 px-3 py-2 text-xs hover:bg-red-100 dark:bg-red-950 dark:text-red-300 dark:hover:bg-red-900 rounded-lg transition-colors flex items-center justify-center gap-2">
+                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                    Hapus Foto
+                                </button>
                             </div>
                             @error($section['name'])<p class="mt-1 text-sm font-semibold text-red-600">{{ $message }}</p>@enderror
                         @endforeach
@@ -162,59 +197,123 @@
     </div>
 
     <script>
-        function handlePhotoUpload(input, prefix) {
-            console.log('📁 File selected:', input.files[0]?.name);
+        // Trigger file input click when upload area clicked
+        function triggerFileClick(inputId) {
+            console.log('🖱️ Click triggered on upload area:', inputId);
+            const input = document.getElementById(inputId);
+            if (input) {
+                input.click();
+                return false;
+            }
+        }
+
+        // Handle photo upload with preview
+        function handlePhotoUpload(input, prefix, elements) {
+            console.log('📁 File selected:', prefix);
             
             const file = input.files && input.files[0];
-            if (!file) return;
+            if (!file) {
+                console.warn('⚠️ No file selected');
+                return;
+            }
             
-            if (!file.type.match(/image\/(png|jpg|jpeg|webp)/)) {
+            // Validate file type
+            if (!file.type.match(/image\/(png|jpg|jpeg|webp)/i)) {
                 alert('❌ File harus berupa gambar PNG, JPG, atau WEBP!');
                 input.value = '';
                 return;
             }
             
+            // Validate file size (5MB)
             if (file.size > 5 * 1024 * 1024) {
-                alert('❌ Ukuran file terlalu besar! Maksimal 5MB (' + (file.size / 1024 / 1024).toFixed(2) + 'MB detected)');
+                const fileSizeMB = (file.size / 1024 / 1024).toFixed(2);
+                alert('❌ Ukuran file terlalu besar! Maksimal 5MB (' + fileSizeMB + 'MB detected)');
                 input.value = '';
                 return;
             }
             
+            // Parse elements string (previewClass,imgId,removeBtnId)
+            const elementIds = elements.split(',');
+            if (elementIds.length < 3) {
+                console.error('❌ Invalid element IDs format');
+                alert('❌ Error: Invalid element configuration');
+                return;
+            }
+            
+            const previewClass = elementIds[0].trim();
+            const imgId = elementIds[1].trim();
+            const removeBtnId = elementIds[2].replace('}', '').trim();
+            
+            console.log('🔍 Elements found:', { previewClass, imgId, removeBtnId });
+            
             const reader = new FileReader();
+            
             reader.onload = function(e) {
-                const imgId = input.id.replace('foto_', 'img_');
-                const previewDiv = input.closest('div').querySelector('[id^="preview_"]');
-                const imgElement = document.getElementById(imgId);
-                const removeBtn = document.getElementById('remove_' + prefix);
-                
-                if (imgElement && e.target.result) {
-                    if (imgElement.src && imgElement.src.startsWith('blob:')) {
-                        URL.revokeObjectURL(imgElement.src);
+                try {
+                    const previewDiv = document.getElementById(previewClass);
+                    const imgElement = document.getElementById(imgId);
+                    const removeBtn = document.getElementById(removeBtnId);
+                    
+                    console.log('✅ Element lookup:', {
+                        previewDiv: !!previewDiv,
+                        imgElement: !!imgElement,
+                        removeBtn: !!removeBtn
+                    });
+                    
+                    if (imgElement && e.target.result) {
+                        // Revoke previous blob URL to prevent memory leak
+                        if (imgElement.src && imgElement.src.startsWith('blob:')) {
+                            URL.revokeObjectURL(imgElement.src);
+                        }
+                        
+                        // Set image source
+                        imgElement.src = e.target.result;
+                        imgElement.classList.remove('hidden');
+                        
+                        // Hide placeholder
+                        if (previewDiv) previewDiv.classList.add('hidden');
+                        
+                        // Show remove button
+                        if (removeBtn) removeBtn.classList.remove('hidden');
+                        
+                        console.log('✅ Photo uploaded successfully!', {
+                            fileName: file.name,
+                            fileSize: (file.size / 1024).toFixed(2) + ' KB',
+                            fileType: file.type,
+                            previewHeight: imgElement.offsetHeight + 'px'
+                        });
+                    } else {
+                        throw new Error('Elements not found or no image data');
                     }
-                    
-                    imgElement.src = e.target.result;
-                    imgElement.classList.remove('hidden');
-                    
-                    if (previewDiv) previewDiv.classList.add('hidden');
-                    if (removeBtn) removeBtn.classList.remove('hidden');
-                    
-                    console.log('✅ Photo uploaded successfully!');
+                } catch (error) {
+                    console.error('❌ Error processing image:', error);
+                    alert('❌ Error loading image: ' + error.message);
+                    input.value = '';
                 }
             };
             
             reader.onerror = function() {
+                console.error('❌ FileReader error');
                 alert('❌ Error reading file. Please try again.');
                 input.value = '';
             };
             
-            reader.readAsDataURL(file);
+            // Read file as Data URL
+            try {
+                reader.readAsDataURL(file);
+                console.log('🔄 Reading file as DataURL...');
+            } catch (error) {
+                console.error('❌ Failed to read file:', error);
+                alert('❌ Cannot read file. Please check your browser compatibility.');
+            }
         }
         
-        function updateImageAlt(input) {
-            const wrap = input.closest('div');
+        // Update image alt text when caption changes
+        function updateImageAlt(input, imgId) {
+            const wrap = input.closest('.upload-container');
             if (!wrap) return;
             
-            const img = wrap.querySelector('img');
+            const img = document.getElementById(imgId);
             if (!img) return;
             
             const caption = input.value.trim();
@@ -222,40 +321,114 @@
             console.log('✓ Caption updated:', caption);
         }
         
-        function removePhoto(prefix) {
-            const wrap = document.getElementById('remove_' + prefix)?.closest('div');
-            if (!wrap) return;
+        // Remove uploaded photo
+        function removePhoto(prefix, previewClass) {
+            console.log('🗑️ Removing photo:', prefix);
+            
+            const wrap = document.querySelector(`[data-upload-index="${prefix}"]`);
+            if (!wrap) {
+                console.error('❌ Upload container not found for:', prefix);
+                return;
+            }
             
             const input = wrap.querySelector('input[type="file"]');
-            const previewDiv = wrap.querySelector('[id^="preview_"]');
-            const img = wrap.querySelector('img');
+            const previewDiv = document.getElementById(previewClass);
+            const img = wrap.querySelector('img[id^="img_"]');
             const captionInput = wrap.querySelector('input[name*="caption_"]');
             const removeBtn = document.getElementById('remove_' + prefix);
             
-            if (input) input.value = '';
-            if (previewDiv) previewDiv.classList.remove('hidden');
+            console.log('🔍 Elements:', {
+                input: !!input,
+                previewDiv: !!previewDiv,
+                img: !!img,
+                captionInput: !!captionInput,
+                removeBtn: !!removeBtn
+            });
+            
+            if (input) {
+                input.value = '';
+                console.log('✓ Input cleared');
+            }
+            
+            if (previewDiv) {
+                previewDiv.classList.remove('hidden');
+                console.log('✓ Preview shown');
+            }
+            
             if (img && img.src.startsWith('blob:')) {
                 URL.revokeObjectURL(img.src);
+                img.src = '';
             }
-            img.src = '';
-            img.classList.add('hidden');
-            img.removeAttribute('alt');
-            if (captionInput) captionInput.value = '';
-            if (removeBtn) removeBtn.classList.add('hidden');
+            img?.classList.add('hidden');
+            img?.removeAttribute('alt');
+            console.log('✓ Image hidden and cleaned');
             
-            console.log('🗑️ Photo removed:', prefix);
+            if (captionInput) {
+                captionInput.value = '';
+                console.log('✓ Caption cleared');
+            }
+            
+            if (removeBtn) {
+                removeBtn.classList.add('hidden');
+                console.log('✓ Remove button hidden');
+            }
+            
+            console.log('✅ Photo removal complete for:', prefix);
         }
         
+        // Toggle section 2 visibility
         document.getElementById('toggle_section_2')?.addEventListener('click', function() {
             const section2 = document.getElementById('section_2');
             if (section2.classList.contains('hidden')) {
                 section2.classList.remove('hidden');
                 this.textContent = '− Sembunyikan Bagian 2';
-                setTimeout(() => section2.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+                setTimeout(() => {
+                    section2.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 100);
             } else {
                 section2.classList.add('hidden');
                 this.textContent = '+ Tampilkan Bagian 2 (Opsional)';
             }
+        });
+        
+        // Initialize all photo upload areas on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Maintenance form initialized');
+            
+            // Add drag and drop support
+            document.querySelectorAll('.upload-container').forEach(container => {
+                container.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    this.style.borderColor = '#2563eb';
+                    this.style.backgroundColor = '#eff6ff';
+                });
+                
+                container.addEventListener('dragleave', function(e) {
+                    e.preventDefault();
+                    this.style.borderColor = '';
+                    this.style.backgroundColor = '';
+                });
+                
+                container.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    this.style.borderColor = '';
+                    this.style.backgroundColor = '';
+                    
+                    const input = this.querySelector('input[type="file"]');
+                    const files = e.dataTransfer.files;
+                    
+                    if (files.length > 0) {
+                        // Create a new FileList
+                        const dt = new DataTransfer();
+                        dt.items.add(files[0]);
+                        input.files = dt.files;
+                        
+                        // Trigger change event
+                        const event = new Event('change', { bubbles: true });
+                        input.dispatchEvent(event);
+                    }
+                });
+            });
         });
     </script>
 </x-bauhaus.layout>
