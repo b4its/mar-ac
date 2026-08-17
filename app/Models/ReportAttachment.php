@@ -44,9 +44,17 @@ class ReportAttachment extends Model
      * Nomor bagian (section) pada kartu pelaporan perawatan.
      * Bagian pertama memakai slot_key tanpa akhiran; bagian kedua memakai akhiran "_2".
      */
-    public function bagian(): int
+    public function getBagianAttribute(): int
     {
         return str_ends_with((string) $this->slot_key, '_2') ? 2 : 1;
+    }
+
+    /**
+     * Get section number without using Eloquent accessor pattern.
+     */
+    public function sectionNumber(): int
+    {
+        return $this->bagian;
     }
 
     public static function slotLabel(string $slotKey): string

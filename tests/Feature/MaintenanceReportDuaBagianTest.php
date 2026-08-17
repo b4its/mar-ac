@@ -130,7 +130,7 @@ it('laporan perawatan dua bagian menyimpan item dan lampiran terpisah', function
         ->and($report->attachments()->where('slot_key', 'outdoor_cleaning_2')->exists())->toBeTrue()
         ->and($report->attachments()->where('slot_key', 'maintenance_card_2')->exists())->toBeTrue()
         ->and($report->attachments()->where('slot_key', 'indoor_cleaning_2')->first()->caption)->toBe('Pencucian AC Indoor')
-        ->and($report->attachments()->where('slot_key', 'indoor_cleaning_2')->first()->bagian())->toBe(2);
+        ->and($report->attachments()->where('slot_key', 'indoor_cleaning_2')->first()->bagian)->toBe(2);
 });
 
 it('bagian kedua tanpa foto ditolak saat asset_id_2 diisi', function () {
@@ -420,7 +420,7 @@ it('lampiran tambahan bagian pertama (gambar + caption) tersimpan dan tampil di 
     $extra = $report->attachments()->where('slot_key', 'lampiran_tambahan')->first();
     expect($extra)->not->toBeNull()
         ->and($extra->caption)->toBe('Foto kondisi pipa sebelum dibersihkan')
-        ->and($extra->bagian())->toBe(1);
+        ->and($extra->bagian)->toBe(1);
 
     $html = view('pdf.maintenance-report', [
         'report' => $report->load(['asset.room.building', 'asset.department', 'items.asset.room.building', 'items.asset.department', 'attachments']),
@@ -460,7 +460,7 @@ it('lampiran tambahan bagian kedua tersimpan dengan penanda bagian 2', function 
     $extra = $report->attachments()->where('slot_key', 'lampiran_tambahan_2')->first();
     expect($extra)->not->toBeNull()
         ->and($extra->caption)->toBe('Kondisi setelah pembersihan pada bagian 2')
-        ->and($extra->bagian())->toBe(2);
+        ->and($extra->bagian)->toBe(2);
 });
 
 it('caption wajib diisi saat gambar lampiran tambahan dikirim', function () {
