@@ -201,9 +201,10 @@ class DatabaseSeeder extends Seeder
     }
 
     /**
-     * 100 aset AC. 16 aset pertama mempertahankan data demo lama, sisanya
-     * dibangkitkan dengan kombinasi merk/kapasitas/tahun/status yang beragam.
-     * Satu aset sengaja tanpa ruangan.
+     * 500+ aset AC: setiap ruangan berisi 5 aset agar daftar alat/mesin pada
+     * form tetap bervariasi setelah filter lokasi dipilih. 16 aset pertama
+     * mempertahankan data demo lama, sisanya dibangkitkan dengan kombinasi
+     * merk/kapasitas/tahun/status yang beragam. Satu aset sengaja tanpa ruangan.
      *
      * @param  array<int, Building>  $buildings
      * @param  array<int, Room>  $rooms
@@ -255,31 +256,45 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
+        // Setiap ruangan diisi 5 aset agar daftar alat/mesin pada form tidak
+        // hanya menampilkan satu pilihan setelah ruangan dipilih.
         $types = ['AC Split 1 PK', 'AC Split 1,5 PK', 'AC Split 2 PK', 'AC Cassette 3 PK', 'AC Standing 5 PK'];
         $kapasitasPool = ['1 PK', '1,5 PK', '2 PK', '3 PK', '5 PK'];
         $merks = ['Daikin', 'Panasonic', 'Gree', 'Sharp', 'LG', 'Samsung', 'Mitsubishi', 'Carrier', 'Midea', 'Toshiba'];
         $statuses = ['baik', 'baik', 'baik', 'rusak_ringan', 'rusak_sedang', 'rusak_berat'];
 
         $rows = [];
-        for ($i = 17; $i <= self::TARGET; $i++) {
-            $tahun = 2016 + (($i - 1) % 9);
-            $perawatanTerakhir = $i % 10 === 0 ? null : now()->subDays(($i * 3) % 300 + 1);
+        $nextKode = 17;
+        $counter = 1;
 
-            $rows[] = [
-                'nama_alat' => $types[($i - 1) % count($types)],
-                'jenis_alat' => 'Pendingin Ruangan',
-                'kode_alat' => sprintf('AC-%03d', $i),
-                'no_inventaris' => sprintf('INV-%d-%04d', $tahun, $i),
-                'room_id' => $roomByIndex($i - 17)?->id,
-                'department_id' => $departments[($i - 17) % count($departments)]->id,
-                'kapasitas' => $kapasitasPool[($i - 1) % count($kapasitasPool)],
-                'merk' => $merks[($i - 1) % count($merks)],
-                'tahun_pemakaian' => $tahun,
-                'status' => $statuses[($i - 1) % count($statuses)],
-                'last_maintenance_date' => $perawatanTerakhir?->toDateString(),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
+        foreach ($rooms as $roomIndex => $room) {
+            // Ruangan 0..14 sudah memiliki 1 aset legacy (AC-001..AC-015).
+            $existing = $roomIndex < 15 ? 1 : 0;
+            $needed = 5 - $existing;
+
+            for ($j = 0; $j < $needed; $j++) {
+                $i = $nextKode++;
+                $tahun = 2016 + (($counter - 1) % 9);
+                $perawatanTerakhir = $counter % 10 === 0 ? null : now()->subDays(($counter * 3) % 300 + 1);
+
+                $rows[] = [
+                    'nama_alat' => $types[($counter - 1) % count($types)],
+                    'jenis_alat' => 'Pendingin Ruangan',
+                    'kode_alat' => sprintf('AC-%03d', $i),
+                    'no_inventaris' => sprintf('INV-%d-%04d', $tahun, $i),
+                    'room_id' => $room->id,
+                    'department_id' => $departments[($counter - 1) % count($departments)]->id,
+                    'kapasitas' => $kapasitasPool[($counter - 1) % count($kapasitasPool)],
+                    'merk' => $merks[($counter - 1) % count($merks)],
+                    'tahun_pemakaian' => $tahun,
+                    'status' => $statuses[($counter - 1) % count($statuses)],
+                    'last_maintenance_date' => $perawatanTerakhir?->toDateString(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+
+                $counter++;
+            }
         }
 
         Asset::insert($rows);
