@@ -4,6 +4,8 @@ namespace App\Http\Livewire;
 
 use Livewire\Component;
 use App\Models\Asset;
+use App\Models\Department;
+use App\Models\Room;
 use App\Models\Vendor;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -32,15 +34,24 @@ class SearchableSelect extends Component
         $this->placeholder = $placeholder;
         $this->selectedId = $selectedId;
         $this->required = $required;
-        $this->locationLocked = false; // Initialize explicitly
+        $this->locationLocked = false;
         
         // Check if user has permission to create
         $userCanCreate = auth()->check() && auth()->user()->hasRole('admin');
         
         if (!$userCanCreate) {
-            // For non-admin users, disable creating option entirely
             $this->placeholder .= ' (hanya dapat memilih yang sudah tersedia)';
         }
+    }
+
+    #[On('location-filter-updated')]
+    public function updateLocation(array $filters): void
+    {
+        if (! isset($filters['building_id'], $filters['department_id'], $filters['room_id'])) {
+            return;
+        }
+        
+        $this->locationLocked = true;
     }
 
     protected function getOptionsQuery(): Builder
@@ -76,20 +87,28 @@ class SearchableSelect extends Component
 
     public function getOptionsProperty(): array
     {
-        if ($this->search === '' && $this->locationLocked) {
+        if ($this->locationLocked && ! empty($this->search)) {
+            return [['id' => null, 'label' => 'Silakan pilih alat pada lokasi ini.']];
+        }
+        
+        if ($this->locationLocked && empty($this->search)) {
             return [['id' => null, 'label' => 'Pilih gedung, lalu jurusan, lalu ruangan di atas dulu ya.']];
         }
         
-        $options = $this->getOptionsQuery()
-            ->pluck(fn($item) => [
+        $query = $this->getOptionsQuery();
+        $results = $query->get();
+        
+        $options = [];
+        foreach ($results as $item) {
+            $options[] = [
                 'id' => $item->id,
-                'label' => $item->nama_alat ?: $item->nama_vendor,
+                'label' => $this->type === 'asset' ? $item->nama_alat : $item->nama_vendor,
                 'condition' => null,
                 'description' => null,
-            ], fn($item) => $this->type === 'asset' ? $item->nama_alat : $item->nama_vendor)
-            ->toArray();
+            ];
+        }
         
-        if ($options) {
+        if (!empty($options)) {
             $first = reset($options);
             $this->exactMatch = strcasecmp($first['label'] ?? '', $this->search) === 0;
         } else {
