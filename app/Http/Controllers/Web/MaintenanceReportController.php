@@ -37,7 +37,7 @@ class MaintenanceReportController extends Controller
             'biaya' => ['nullable', 'numeric', 'min:0'],
             'biaya_jasa' => ['nullable', 'numeric', 'min:0'],
             // Bagian kedua (opsional, maksimal dua bagian dalam satu dokumen)
-            'asset_id_2' => ['nullable', 'exists:assets,id'],
+            'asset_id_2' => ['nullable', 'exists:assets,id', 'different:asset_id'],
             'jenis_pekerjaan_2' => ['required_with:asset_id_2', 'string', 'max:255'],
             'uraian_pekerjaan_2' => ['nullable', 'string', 'max:2000'],
             'tanggal_pelaksanaan_2' => ['nullable', 'date'],
@@ -70,6 +70,8 @@ class MaintenanceReportController extends Controller
             'foto_kartu_2' => ['required_with:asset_id_2', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'foto_extra_2' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'caption_extra_2' => ['required_with:foto_extra_2', 'nullable', 'string', 'max:255'],
+        ], [
+            'asset_id_2.different' => 'Alat / mesin pada Bagian 2 tidak boleh sama dengan alat / mesin pada Bagian 1.',
         ]);
 
         $storedPaths = [];
