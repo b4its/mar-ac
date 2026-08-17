@@ -5,6 +5,7 @@ namespace App\Filament\Resources\MaintenanceReports\Schemas;
 use App\Enums\ReportStatus;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -87,6 +88,60 @@ class MaintenanceReportForm
                             ->columnSpanFull(),
                     ])
                     ->columns(2),
+                Section::make('Bagian Kedua (Opsional)')
+                    ->description('Tambahkan laporan perawatan kedua dalam satu dokumen yang sama. Maksimal dua bagian.')
+                    ->schema([
+                        Repeater::make('items')
+                            ->label('Bagian Tambahan')
+                            ->relationship()
+                            ->defaultItems(0)
+                            ->maxItems(1)
+                            ->addActionLabel('+ Tambah Bagian')
+                            ->columns(2)
+                            ->schema([
+                                Select::make('asset_id')
+                                    ->label('Aset')
+                                    ->relationship('asset', 'nama_alat')
+                                    ->searchable()
+                                    ->preload()
+                                    ->createOptionForm([
+                                        TextInput::make('nama_alat')
+                                            ->label('Nama Aset')
+                                            ->required()
+                                            ->maxLength(255),
+                                        TextInput::make('kode_alat')
+                                            ->label('Kode Alat')
+                                            ->maxLength(255),
+                                        TextInput::make('no_inventaris')
+                                            ->label('No. Inventaris')
+                                            ->maxLength(255),
+                                    ])
+                                    ->required(),
+                                TextInput::make('jenis_pekerjaan')
+                                    ->label('Jenis Pekerjaan')
+                                    ->required()
+                                    ->maxLength(255),
+                                DatePicker::make('tanggal_pelaksanaan')
+                                    ->label('Tanggal Pelaksanaan'),
+                                TextInput::make('biaya')
+                                    ->label('Biaya Bahan/Sparepart (Rp)')
+                                    ->mask(RawJs::make('$money($input, \',\', \'.\', 0)'))
+                                    ->stripCharacters('.')
+                                    ->prefix('Rp')
+                                    ->default(0)
+                                    ->minValue(0),
+                                TextInput::make('biaya_jasa')
+                                    ->label('Biaya Jasa (Rp)')
+                                    ->mask(RawJs::make('$money($input, \',\', \'.\', 0)'))
+                                    ->stripCharacters('.')
+                                    ->prefix('Rp')
+                                    ->default(0)
+                                    ->minValue(0),
+                                Textarea::make('uraian_pekerjaan')
+                                    ->label('Uraian Pekerjaan')
+                                    ->columnSpanFull(),
+                            ]),
+                    ]),
                 Section::make('Alur Persetujuan')
                     ->description('Status dan petugas yang memverifikasi laporan ini.')
                     ->schema([

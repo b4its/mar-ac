@@ -74,6 +74,34 @@ class MaintenanceReportInfolist
                             ->columnSpanFull(),
                     ])
                     ->columns(2),
+                Section::make('Bagian Kedua (jika ada)')
+                    ->schema([
+                        RepeatableEntry::make('items')
+                            ->label('Bagian Tambahan')
+                            ->schema([
+                                TextEntry::make('asset.nama_alat')
+                                    ->label('Aset'),
+                                TextEntry::make('jenis_pekerjaan')
+                                    ->label('Jenis Pekerjaan'),
+                                TextEntry::make('asset.room.nama_ruangan')
+                                    ->label('Lokasi'),
+                                TextEntry::make('tanggal_pelaksanaan')
+                                    ->label('Tanggal Pelaksanaan')
+                                    ->date(),
+                                TextEntry::make('biaya')
+                                    ->label('Biaya Bahan/Sparepart')
+                                    ->money('IDR'),
+                                TextEntry::make('biaya_jasa')
+                                    ->label('Biaya Jasa')
+                                    ->money('IDR'),
+                                TextEntry::make('uraian_pekerjaan')
+                                    ->label('Uraian Pekerjaan')
+                                    ->html()
+                                    ->columnSpanFull(),
+                            ])
+                            ->columns(2)
+                            ->placeholder('Tidak ada bagian tambahan.'),
+                    ]),
                 Section::make('Lampiran Foto Perawatan')
                     ->schema([
                         RepeatableEntry::make('attachments')
