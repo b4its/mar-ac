@@ -90,10 +90,10 @@
                                     <span class="sr-only">Pilih gambar</span>
                                     <input type="file" name="photos[]" accept="image/*" class="sr-only" data-photo-input>
                                     <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                                        <circle cx="12" cy="13" r="4" />
-                                    </svg>
-                                    <span class="font-display text-xs uppercase tracking-widest" data-photo-placeholder>Pilih gambar…</span>
+                                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                                    <circle cx="12" cy="13" r="4" />
+                                </svg>
+                                <span class="font-display text-xs uppercase tracking-widest" data-photo-placeholder>Pilih gambar…</span>
                                 </label>
                                 <img data-photo-image alt="Pratinjau foto" class="mt-3 hidden h-40 w-full border border-bauhaus-black object-cover">
                                 <input type="text" name="photos_captions[]" class="bauhaus-input mt-3 text-sm" placeholder="Keterangan gambar / caption">

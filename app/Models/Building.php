@@ -13,4 +13,9 @@ class Building extends Model
     {
         return $this->hasMany(Room::class);
     }
+
+    public function departments(): HasMany
+    {
+        return $this->hasMany(Department::class);
+    }
 }

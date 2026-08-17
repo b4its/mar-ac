@@ -4,7 +4,8 @@
             <x-bauhaus.shape type="square" color="blue" class="absolute -right-8 -top-8 h-16 w-16" />
             <x-bauhaus.shape type="circle" color="red" class="absolute -bottom-8 -left-8 h-16 w-16" />
 
-            <div class="mb-8">
+            <div class="mb-8 text-center">
+                <img src="{{ asset('images/logoPolnes.png') }}" alt="Logo Polnes" class="mx-auto mb-4 h-12 object-contain">
                 <p class="mb-2 text-xs font-bold uppercase tracking-[0.3em] text-bauhaus-blue">Politeknik Negeri Samarinda</p>
                 <h1 class="bauhaus-title text-4xl lg:text-5xl">UPA.PP</h1>
                 <p class="mt-2 text-sm uppercase tracking-widest text-bauhaus-ink">
@@ -55,21 +56,19 @@
                         <button
                             type="button"
                             @click="show = !show"
-                            class="absolute right-1.5 top-1/2 -translate-y-1/2 border border-bauhaus-black bg-bauhaus-paper p-1.5 hover:bg-bauhaus-paper-dark"
+                            class="absolute right-1.5 top-1/2 -translate-y-1/2 border border-bauhaus-black bg-bauhaus-paper p-1.5 text-bauhaus-ink hover:bg-bauhaus-paper-dark dark:text-slate-300"
                             :aria-label="show ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'"
                             :title="show ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'"
                         >
-                            <svg x-show="!show" x-cloak class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                data-eye-show>
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                                <circle cx="12" cy="12" r="3" />
+                            <svg x-show="!show" x-cloak xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-eye-show>
+                                <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/>
+                                <circle cx="12" cy="12" r="3"/>
                             </svg>
-                            <svg x-show="show" x-cloak class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                data-eye-hide>
-                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
-                                <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
-                                <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" />
-                                <path d="M1 1l22 22" />
+                            <svg x-show="show" x-cloak xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-eye-hide>
+                                <path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/>
+                                <path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/>
+                                <path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/>
+                                <path d="m2 2 20 20"/>
                             </svg>
                         </button>
                     </div>

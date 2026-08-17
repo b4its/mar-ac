@@ -6,13 +6,21 @@
     @include('pdf.partials.style')
 </head>
 <body>
-    @include('pdf.partials.kop', [
-        'formNumber' => 'FM-Polnes-11-02-04/R3',
-        'title' => 'Laporan Hasil Perbaikan Aset',
-        'reportNumber' => $report->nomor_laporan,
-    ])
+    <table class="doc-meta">
+        <tr>
+            <td class="left"><b>Laporan Hasil Perbaikan Aset</b></td>
+            <td class="right"><b>KODE DOKUMEN</b> : FM-Polnes-11-02-04/R3</td>
+        </tr>
+    </table>
 
     <table class="form">
+        @include('pdf.partials.doc-header', [
+            'colspan' => 2,
+            'title' => 'Laporan Hasil<br>Perbaikan Aset',
+            'reportLabel' => 'No. Laporan perbaikan :',
+            'reportNumber' => $report->nomor_laporan,
+            'logoSource' => $logoSource ?? null,
+        ])
         <tr>
             <td class="label">Laporan Kerusakan</td>
             <td>: {{ $report->damageReport?->nomor_laporan ?: '-' }}</td>
@@ -86,7 +94,12 @@
         <div class="foto-grid">
             @foreach ($report->attachments as $attachment)
                 <div class="foto-item">
-                    <img src="{{ $storageUrl($attachment) }}" alt="{{ $attachment->slot_key }}">
+                    @php($imageSource = $storageUrl($attachment))
+                    @if ($imageSource)
+                        <img src="{{ $imageSource }}" alt="{{ $attachment->slot_key }}">
+                    @else
+                        <div class="foto-caption">Foto tidak tersedia</div>
+                    @endif
                     <div class="foto-caption">{{ $attachment->caption }}</div>
                 </div>
             @endforeach

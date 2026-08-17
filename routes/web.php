@@ -17,7 +17,7 @@ Route::get('/', function () {
         return redirect()->route('login');
     }
 
-    return redirect()->route($user->hasRole('admin') ? 'filament.admin.pages.dashboard' : 'welcome');
+    return redirect()->route('welcome');
 });
 
 Route::middleware('guest')->group(function () {
@@ -42,6 +42,12 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/laporan/status', [ReportStatusController::class, 'show'])->name('laporan.status');
     Route::get('/laporan/saya', [LaporanSayaController::class, 'index'])->name('laporan.saya');
+    
+    // AJAX endpoints for Laporan Saya
+    Route::post('/laporan/saya/reports', [LaporanSayaController::class, 'getReports'])->name('laporan.saya.reports');
+    Route::get('/laporan/saya/buildings', [LaporanSayaController::class, 'getBuildings'])->name('laporan.saya.buildings');
+    Route::get('/laporan/saya/departments', [LaporanSayaController::class, 'getDepartments'])->name('laporan.saya.departments');
+    Route::get('/laporan/saya/rooms', [LaporanSayaController::class, 'getRooms'])->name('laporan.saya.rooms');
 
     Route::get('/aset', [AssetController::class, 'index'])->name('aset.index');
     Route::get('/aset/{asset}', [AssetController::class, 'detail'])->name('aset.detail');

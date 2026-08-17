@@ -6,6 +6,7 @@ use App\Models\DamageReport;
 use App\Models\MaintenanceReport;
 use App\Models\RepairReport;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Spatie\LaravelPdf\Facades\Pdf;
 
@@ -43,9 +44,8 @@ class LaporanPdf
 
     private static function render(string $view, array $data, string $filename, bool $download): Response
     {
-        $data['storageUrl'] = fn ($attachment): string => str_starts_with($attachment->file_path, 'media/')
-            ? public_path($attachment->file_path)
-            : Storage::disk('public')->path($attachment->file_path);
+        $data['storageUrl'] = fn ($attachment): string => self::attachmentDataUri($attachment);
+        $data['logoSource'] = self::logoDataUri();
 
         $previousHome = getenv('HOME') ?: null;
         putenv('HOME=/tmp');
@@ -76,5 +76,31 @@ class LaporanPdf
     private static function safeFilename(string $filename): string
     {
         return str_replace('/', '-', $filename);
+    }
+
+    private static function logoDataUri(): string
+    {
+        $path = public_path('images/logoPolnes.png');
+
+        if (! File::exists($path)) {
+            return '';
+        }
+
+        return 'data:image/png;base64,'.base64_encode(File::get($path));
+    }
+
+    private static function attachmentDataUri($attachment): string
+    {
+        $path = str_starts_with($attachment->file_path, 'media/')
+            ? public_path($attachment->file_path)
+            : Storage::disk('public')->path($attachment->file_path);
+
+        if (! File::exists($path)) {
+            return '';
+        }
+
+        $mimeType = File::mimeType($path) ?: $attachment->mime_type ?: 'image/jpeg';
+
+        return 'data:'.$mimeType.';base64,'.base64_encode(File::get($path));
     }
 }

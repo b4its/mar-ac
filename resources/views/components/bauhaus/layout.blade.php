@@ -30,15 +30,18 @@
         <div class="bauhaus-grid absolute inset-0 -z-10"></div>
 
         <header class="sticky top-0 z-40 border-b border-slate-200 bg-white/90 px-4 py-4 shadow-sm backdrop-blur lg:px-10 dark:border-slate-800 dark:bg-slate-950/90">
-            <div class="mx-auto flex w-full max-w-6xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <a href="{{ auth()->check() ? route('welcome') : route('login') }}" class="bauhaus-title flex items-center gap-3 text-xl text-bauhaus-blue lg:text-2xl">
-                <span class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-bauhaus-blue text-sm font-bold text-white shadow-lg shadow-blue-500/20">UP</span>
-                <span>UPA.PP</span>
+            <div class="mx-auto flex w-full max-w-6xl flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <a href="{{ auth()->check() ? route('welcome') : route('login') }}" class="bauhaus-title flex min-w-0 items-center gap-3 text-xl text-bauhaus-blue lg:text-2xl">
+                <span class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-bauhaus-blue shadow-lg shadow-blue-500/20"><img src="{{ asset('images/logoPolnes.png') }}" alt="Logo Polnes" class="h-8 w-8 object-contain"></span>
+                <span class="truncate">UPA.PP</span>
             </a>
 
-            <nav class="flex flex-wrap items-center gap-2 sm:justify-end">
+            <nav class="flex flex-wrap items-center gap-2 md:justify-end">
                 @auth
-                    <a href="{{ route('welcome') }}" class="bauhaus-btn bg-white text-bauhaus-blue hover:bg-blue-50 dark:bg-slate-900 dark:hover:bg-slate-800">Beranda</a>
+                    <a href="{{ route('welcome') }}" class="bauhaus-btn flex-1 justify-center bg-white text-bauhaus-blue hover:bg-blue-50 sm:flex-none dark:bg-slate-900 dark:hover:bg-slate-800">Beranda</a>
+                    @if (auth()->user()->hasRole('admin'))
+                        <a href="{{ route('filament.admin.pages.dashboard') }}" class="bauhaus-btn flex-1 justify-center bg-bauhaus-blue text-white hover:bg-blue-700 sm:flex-none">Panel Admin</a>
+                    @endif
                     <form method="POST" action="{{ route('logout') }}" id="logout-form">
                         @csrf
                         <button type="submit" class="bauhaus-btn bg-white text-slate-700 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">Keluar</button>

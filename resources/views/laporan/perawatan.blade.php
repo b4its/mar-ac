@@ -1,301 +1,149 @@
-<x-bauhaus.layout title="Kartu Pelaporan Hasil Perawatan">
-    <div class="w-full max-w-3xl">
-        <div class="mb-8 flex items-center gap-4">
-            <x-bauhaus.shape type="circle-hole" color="red" class="h-12 w-12" />
-            <div>
-                <h1 class="bauhaus-title text-2xl lg:text-4xl">Kartu Pelaporan<br>Hasil Perawatan</h1>
-                <p class="mt-1 text-xs font-bold uppercase tracking-[0.25em] text-bauhaus-blue">FM-Polnes-11-12-11/R3</p>
-            </div>
-        </div>
+<div class="mx-auto w-full max-w-[210mm] bg-white p-8 text-black font-serif text-sm">
+    <table class="w-full border-collapse border border-black">
+        <!-- Header Dokumen -->
+        <tr>
+            <td class="border border-black p-2 font-bold" colspan="2">
+                Kartu Laporan Hasil Perawatan
+            </td>
+            <td class="border border-black p-2 text-xs uppercase" colspan="2">
+                <table class="w-full">
+                    <tr>
+                        <td class="w-32 py-0.5">Tanggal Berlaku</td>
+                        <td class="py-0.5">: 24 Januari 2024</td>
+                    </tr>
+                    <tr>
+                        <td class="py-0.5">Kode Dokumen</td>
+                        <td class="py-0.5">: FM-Polnes-11-12-11/R3</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
 
-        <form method="POST" action="{{ route('laporan.perawatan.store') }}" enctype="multipart/form-data" class="bauhaus-card relative p-8 lg:p-10">
-            @csrf
-            <x-bauhaus.shape type="triangle" color="yellow" class="absolute -right-6 -top-6 h-12 w-12" />
-
-            {{-- Filter lokasi bercabang: Gedung → Jurusan → Ruangan --}}
-            <div class="mb-8 border-b border-bauhaus-black pb-6">
-                <p class="mb-1 font-display text-sm uppercase tracking-widest">Pilih Lokasi Alat</p>
-                <p class="mb-4 text-sm text-slate-500">Ikuti urutannya, ya: pilih gedung, lalu jurusan, lalu ruangan. Daftar alat muncul otomatis setelah ruangan dipilih.</p>
-                <livewire:lokasi-filter wire:key="maintenance-lokasi-filter" />
-            </div>
-
-            {{-- Vendor / Pelaksana (berlaku untuk seluruh laporan) --}}
-            <div class="mb-8">
-                <livewire:searchable-select
-                    type="vendor"
-                    name="vendor_id"
-                    label="Dikerjakan oleh (opsional)"
-                    placeholder="Pilih nama perusahaan / teknisi..."
-                    :selected="old('vendor_id') ? (int) old('vendor_id') : null"
-                    wire:key="maintenance-vendor-select"
-                />
-            </div>
-
-            <div data-perawatan-sections>
-                {{-- ================= BAGIAN 1 ================= --}}
-                <section data-bagian="1" class="border-t border-bauhaus-black pt-6">
-                    <div class="mb-6 flex items-center gap-3">
-                        <span class="inline-flex h-8 items-center bg-bauhaus-blue px-3 font-display text-xs uppercase tracking-widest text-white">Bagian 1</span>
-                        <span class="font-display text-xs uppercase tracking-widest text-slate-500">Untuk alat pertama</span>
-                    </div>
-
-                    <div class="grid gap-6 md:grid-cols-2">
-                        <div class="md:col-span-2">
-                            <livewire:searchable-select
-                                type="asset"
-                                name="asset_id"
-                                label="Alat / Mesin"
-                                placeholder="Pilih alat / mesin dari daftar..."
-                                :selected="old('asset_id') ? (int) old('asset_id') : null"
-                                required
-                                :require-room="true"
-                                :show-condition="true"
-                                partner="asset_id_2"
-                                wire:key="maintenance-asset-select"
-                            />
-                            @error('asset_id')<p class="mt-1 text-sm font-semibold text-red-600">{{ $message }}</p>@enderror
-                        </div>
-
-                        <div class="md:col-span-2">
-                            <label for="jenis_pekerjaan" class="mb-2 block font-display text-sm uppercase tracking-widest">Jenis Pekerjaan</label>
-                            <input
-                                type="text"
-                                id="jenis_pekerjaan"
-                                name="jenis_pekerjaan"
-                                value="{{ old('jenis_pekerjaan') }}"
-                                required
-                                placeholder="Contoh: Cleaning Indoor & Outdoor AC"
-                                class="bauhaus-input"
-                            >
-                            @error('jenis_pekerjaan')<p class="mt-1 text-sm font-semibold text-red-600">{{ $message }}</p>@enderror
-                        </div>
-
-                        <div class="md:col-span-2">
-                            <label for="uraian_pekerjaan" class="mb-2 block font-display text-sm uppercase tracking-widest">Uraian Pekerjaan</label>
-                            <textarea
-                                id="uraian_pekerjaan"
-                                name="uraian_pekerjaan"
-                                rows="4"
-                                placeholder="Detail pekerjaan yang dilaksanakan…"
-                                class="bauhaus-input resize-y"
-                            >{{ old('uraian_pekerjaan') }}</textarea>
-                        </div>
-
-                        <div>
-                            <label for="tanggal_pelaksanaan" class="mb-2 block font-display text-sm uppercase tracking-widest">Tanggal Pelaksanaan</label>
-                            <input type="date" id="tanggal_pelaksanaan" name="tanggal_pelaksanaan" value="{{ old('tanggal_pelaksanaan', now()->toDateString()) }}" class="bauhaus-input">
-                        </div>
-
-                        <div>
-                            <label for="biaya" class="mb-2 block font-display text-sm uppercase tracking-widest">Biaya Material (Rp)</label>
-                            <input type="text" id="biaya" name="biaya" inputmode="numeric" value="{{ old('biaya', 0) }}" class="bauhaus-input" data-money-input>
-                            @error('biaya')<p class="mt-1 text-sm font-semibold text-red-600">{{ $message }}</p>@enderror
-                        </div>
-
-                        <div class="md:col-span-2">
-                            <label for="biaya_jasa" class="mb-2 block font-display text-sm uppercase tracking-widest">Biaya Jasa (Rp)</label>
-                            <input type="text" id="biaya_jasa" name="biaya_jasa" inputmode="numeric" value="{{ old('biaya_jasa', 0) }}" class="bauhaus-input" data-money-input>
-                            @error('biaya_jasa')<p class="mt-1 text-sm font-semibold text-red-600">{{ $message }}</p>@enderror
-                        </div>
-
-                        <div class="md:col-span-2 border-t border-bauhaus-black pt-6">
-                            <p class="mb-1 font-display text-sm uppercase tracking-widest">Lampiran Foto Wajib</p>
-                            <p class="mb-4 text-sm text-slate-500">Siapkan 3 foto berikut untuk alat ini:</p>
-                            <div class="grid gap-4 md:grid-cols-3">
-                                @include('laporan.partials.photo-slot', ['field' => 'foto_indoor', 'caption' => 'Pencucian AC Indoor', 'bagian' => 1, 'required' => true])
-                                @include('laporan.partials.photo-slot', ['field' => 'foto_outdoor', 'caption' => 'Pencucian AC Outdoor', 'bagian' => 1, 'required' => true])
-                                @include('laporan.partials.photo-slot', ['field' => 'foto_kartu', 'caption' => 'Kartu Perawatan', 'bagian' => 1, 'required' => true])
-                            </div>
-                        </div>
-
-                        @include('laporan.partials.extra-attachment', ['field' => 'foto_extra', 'captionField' => 'caption_extra', 'bagian' => 1])
-                    </div>
-                </section>
-
-                {{-- ================= BAGIAN 2 (opsional, maksimal 2 bagian) ================= --}}
-                <section data-bagian="2" hidden class="border-t border-bauhaus-black pt-6">
-                    <div class="mb-6 flex items-center gap-3">
-                        <span class="inline-flex h-8 items-center bg-bauhaus-yellow px-3 font-display text-xs uppercase tracking-widest">Bagian 2</span>
-                        <span class="font-display text-xs uppercase tracking-widest text-slate-500">Untuk alat kedua</span>
-                        <button
-                            type="button"
-                            data-bagian-remove
-                            class="bauhaus-btn ml-auto bg-bauhaus-red px-3 py-1.5 text-xs text-white hover:bg-red-700"
-                        >Hapus Alat Ini</button>
-                    </div>
-
-                    <div class="grid gap-6 md:grid-cols-2">
-                        <div class="md:col-span-2">
-                            <livewire:searchable-select
-                                type="asset"
-                                name="asset_id_2"
-                                label="Alat / Mesin"
-                                placeholder="Pilih alat / mesin dari daftar..."
-                                :selected="old('asset_id_2') ? (int) old('asset_id_2') : null"
-                                :require-room="true"
-                                :show-condition="true"
-                                partner="asset_id"
-                                wire:key="maintenance-asset-select-2"
-                            />
-                            @error('asset_id_2')<p class="mt-1 text-sm font-semibold text-red-600">{{ $message }}</p>@enderror
-                        </div>
-
-                        <div class="md:col-span-2">
-                            <label for="jenis_pekerjaan_2" class="mb-2 block font-display text-sm uppercase tracking-widest">Jenis Pekerjaan</label>
-                            <input
-                                type="text"
-                                id="jenis_pekerjaan_2"
-                                name="jenis_pekerjaan_2"
-                                value="{{ old('jenis_pekerjaan_2') }}"
-                                placeholder="Contoh: Cleaning Indoor & Outdoor AC"
-                                class="bauhaus-input"
-                            >
-                            @error('jenis_pekerjaan_2')<p class="mt-1 text-sm font-semibold text-red-600">{{ $message }}</p>@enderror
-                        </div>
-
-                        <div class="md:col-span-2">
-                            <label for="uraian_pekerjaan_2" class="mb-2 block font-display text-sm uppercase tracking-widest">Uraian Pekerjaan</label>
-                            <textarea
-                                id="uraian_pekerjaan_2"
-                                name="uraian_pekerjaan_2"
-                                rows="4"
-                                placeholder="Detail pekerjaan yang dilaksanakan…"
-                                class="bauhaus-input resize-y"
-                            >{{ old('uraian_pekerjaan_2') }}</textarea>
-                        </div>
-
-                        <div>
-                            <label for="tanggal_pelaksanaan_2" class="mb-2 block font-display text-sm uppercase tracking-widest">Tanggal Pelaksanaan</label>
-                            <input type="date" id="tanggal_pelaksanaan_2" name="tanggal_pelaksanaan_2" value="{{ old('tanggal_pelaksanaan_2') }}" class="bauhaus-input">
-                        </div>
-
-                        <div>
-                            <label for="biaya_2" class="mb-2 block font-display text-sm uppercase tracking-widest">Biaya Material (Rp)</label>
-                            <input type="text" id="biaya_2" name="biaya_2" inputmode="numeric" value="{{ old('biaya_2', 0) }}" class="bauhaus-input" data-money-input>
-                            @error('biaya_2')<p class="mt-1 text-sm font-semibold text-red-600">{{ $message }}</p>@enderror
-                        </div>
-
-                        <div class="md:col-span-2">
-                            <label for="biaya_jasa_2" class="mb-2 block font-display text-sm uppercase tracking-widest">Biaya Jasa (Rp)</label>
-                            <input type="text" id="biaya_jasa_2" name="biaya_jasa_2" inputmode="numeric" value="{{ old('biaya_jasa_2', 0) }}" class="bauhaus-input" data-money-input>
-                            @error('biaya_jasa_2')<p class="mt-1 text-sm font-semibold text-red-600">{{ $message }}</p>@enderror
-                        </div>
-
-                        <div class="md:col-span-2 border-t border-bauhaus-black pt-6">
-                            <p class="mb-1 font-display text-sm uppercase tracking-widest">Lampiran Foto Wajib</p>
-                            <p class="mb-4 text-sm text-slate-500">Siapkan 3 foto berikut untuk alat ini:</p>
-                            <div class="grid gap-4 md:grid-cols-3">
-                                @include('laporan.partials.photo-slot', ['field' => 'foto_indoor_2', 'caption' => 'Pencucian AC Indoor', 'bagian' => 2])
-                                @include('laporan.partials.photo-slot', ['field' => 'foto_outdoor_2', 'caption' => 'Pencucian AC Outdoor', 'bagian' => 2])
-                                @include('laporan.partials.photo-slot', ['field' => 'foto_kartu_2', 'caption' => 'Kartu Perawatan', 'bagian' => 2])
-                            </div>
-                        </div>
-
-                        @include('laporan.partials.extra-attachment', ['field' => 'foto_extra_2', 'captionField' => 'caption_extra_2', 'bagian' => 2])
-                    </div>
-                </section>
-            </div>
-
-            <div class="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-bauhaus-black pt-6">
-                <a href="{{ route('welcome') }}" class="bauhaus-btn bg-bauhaus-paper px-5 py-2.5 text-xs">← Kembali</a>
-                <div class="flex flex-wrap items-center gap-3">
-                    <button type="button" data-bagian-add class="bauhaus-btn bg-bauhaus-yellow px-5 py-2.5 text-xs">
-                        + Tambah Alat Lain
-                    </button>
-                    <button type="submit" class="bauhaus-btn bg-bauhaus-blue px-8 py-3 text-white hover:bg-bauhaus-blue-dark">
-                        Kirim Laporan
-                    </button>
+        <!-- Institusi & Judul -->
+        <tr>
+            <td class="border border-black p-2 text-center align-top w-[25%]">
+                <div class="font-bold text-xs">Politeknik Negeri Samarinda</div>
+                <!-- Placeholder untuk Logo UPA.PP -->
+                <div class="mt-3 flex justify-center">
+                    <div class="h-10 w-8 bg-green-800" style="clip-path: polygon(50% 100%, 0 0, 100% 0);"></div>
                 </div>
-            </div>
-        </form>
-    </div>
+                <div class="mt-2 font-bold text-xs">UPA. PP</div>
+            </td>
+            <td class="border border-black p-2 text-center align-middle w-[50%]" colspan="2">
+                <h1 class="font-bold text-lg uppercase tracking-wide">Kartu Laporan<br>Hasil Perawatan</h1>
+            </td>
+            <td class="border border-black p-2 align-top text-xs w-[25%]">
+                No. Laporan perawatan :
+            </td>
+        </tr>
 
-    <script>
-        (function () {
-            var container = document.querySelector('[data-perawatan-sections]');
-            if (!container) {
-                return;
-            }
+        <!-- Detail Alat (Kiri dan Kanan) -->
+        <tr>
+            <td class="border border-black p-0 align-top w-1/2" colspan="2">
+                <table class="w-full text-xs">
+                    <tr>
+                        <td class="p-1.5 w-28 align-top">Nama Alat / Mesin</td>
+                        <td class="p-1.5 align-top">: AC Split 2 PK Panasonic</td>
+                    </tr>
+                    <tr>
+                        <td class="p-1.5 align-top">No. Inventaris</td>
+                        <td class="p-1.5 align-top">: </td>
+                    </tr>
+                    <tr>
+                        <td class="p-1.5 align-top">Lokasi Alat</td>
+                        <td class="p-1.5 align-top">: R. EL 1</td>
+                    </tr>
+                </table>
+            </td>
+            <td class="border border-black p-0 align-top w-1/2" colspan="2">
+                <table class="w-full text-xs">
+                    <tr>
+                        <td class="p-1.5 w-24 align-top">Gedung</td>
+                        <td class="p-1.5 align-top">: Teknik Elektro</td>
+                    </tr>
+                    <tr>
+                        <td class="p-1.5 align-top">Kode Alat</td>
+                        <td class="p-1.5 align-top">: JE</td>
+                    </tr>
+                    <tr>
+                        <td class="p-1.5 align-top">Jurusan/Unit</td>
+                        <td class="p-1.5 align-top">: Teknik Elektro</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
 
-            var addBtn = document.querySelector('[data-bagian-add]');
-            var MAX_BAGIAN = 2;
-            var sections = Array.prototype.slice.call(container.querySelectorAll('[data-bagian]'));
+        <!-- Tabel Material / Suku Cadang (Rata Kanan) -->
+        <tr>
+            <td class="border border-black p-0 align-top w-full" colspan="4">
+                <div class="flex justify-end">
+                    <table class="w-[40%] border-l border-b border-black text-xs text-center border-collapse">
+                        <tr>
+                            <td class="p-1 border-b border-black" colspan="2">Material / Suku Cadang</td>
+                        </tr>
+                        <tr>
+                            <td class="p-1 border-r border-b border-black w-1/2">Kode Alat</td>
+                            <td class="p-1 border-b border-black w-1/2">Harga (Rp.)</td>
+                        </tr>
+                        <tr>
+                            <td class="p-1 border-r border-black h-5"></td>
+                            <td class="p-1 h-5"></td>
+                        </tr>
+                    </table>
+                </div>
+            </td>
+        </tr>
 
-            function visibleCount() {
-                return sections.filter(function (section) { return !section.hidden; }).length;
-            }
+        <!-- Deskripsi Pekerjaan -->
+        <tr>
+            <td class="border border-black p-3 h-24 align-top text-sm" colspan="4">
+                Cleaning indoor & outdoor
+            </td>
+        </tr>
 
-            function sync() {
-                if (addBtn) {
-                    addBtn.hidden = visibleCount() >= MAX_BAGIAN;
-                }
-                sections.forEach(function (section) {
-                    var remove = section.querySelector('[data-bagian-remove]');
-                    if (remove) {
-                        remove.hidden = section.hidden || parseInt(section.dataset.bagian, 10) === 1;
-                    }
-                });
-            }
-
-            function resetSection(section) {
-                section.querySelectorAll('input[type="search"], input[type="text"], input[type="date"], textarea').forEach(function (el) {
-                    el.value = '';
-                });
-                section.querySelectorAll('input[type="file"]').forEach(function (el) {
-                    el.value = '';
-                    var wrap = el.closest('[data-photo-preview-wrap]');
-                    if (wrap) {
-                        var img = wrap.querySelector('[data-photo-image]');
-                        var placeholder = wrap.querySelector('[data-photo-placeholder]');
-                        if (img) {
-                            img.classList.add('hidden');
-                            img.removeAttribute('src');
-                        }
-                        if (placeholder) {
-                            placeholder.textContent = 'Pilih gambar…';
-                        }
-                    }
-                });
-                section.querySelectorAll('input[type="hidden"]').forEach(function (el) {
-                    el.value = '';
-                });
-            }
-
-                if (addBtn) {
-                    addBtn.addEventListener('click', function () {
-                        var next = sections.find(function (section) { return section.hidden; });
-                        if (next) {
-                            next.hidden = false;
-                            sync();
-                        }
-                    });
-                }
-
-                // Buka kembali bagian yang sudah terisi (mis. setelah validasi gagal).
-                sections.forEach(function (section) {
-                    if (!section.hidden) {
-                        return;
-                    }
-                    var assetInput = section.querySelector('input[name="asset_id_2"]');
-                    if (assetInput && assetInput.value !== '') {
-                        section.hidden = false;
-                    }
-                });
-
-                container.addEventListener('click', function (event) {
-                    var remove = event.target.closest('[data-bagian-remove]');
-                    if (!remove) {
-                        return;
-                    }
-                    var section = remove.closest('[data-bagian]');
-                    if (section) {
-                        resetSection(section);
-                        section.hidden = true;
-                        sync();
-                    }
-                });
-
-            sync();
-        })();
-    </script>
-</x-bauhaus.layout>
+        <!-- Blok Tanda Tangan & Biaya -->
+        <tr>
+            <td class="border border-black p-0" colspan="4">
+                <table class="w-full text-xs text-center border-collapse">
+                    <tr>
+                        <td class="border border-black w-[10%] p-1"></td>
+                        <td class="border border-black w-[15%] p-1">Pelaksana</td>
+                        <td class="border border-black w-[55%] p-1" colspan="3">Pemeriksa</td>
+                        <td class="border border-black w-[20%] p-1">Biaya</td>
+                    </tr>
+                    <tr>
+                        <td class="border border-black p-1 text-left">Nama</td>
+                        <td class="border border-black p-1">Vendoor</td>
+                        <td class="border border-black p-1"></td>
+                        <td class="border border-black p-1">Emil Yanto</td>
+                        <td class="border border-black p-1">Ir. Suwarto,<br>ST.,MT.,IPM</td>
+                        <td class="border border-black p-2 align-middle text-right text-base" rowspan="4">
+                            155.000.-
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="border border-black p-1 text-left">Jabatan</td>
+                        <td class="border border-black p-1">Teknisi</td>
+                        <td class="border border-black p-1 text-[10px]">Ka.Sub/Ka.Jur/Ka.Lab/Ka.Beng/Ka.Unit</td>
+                        <td class="border border-black p-1">Teknisi</td>
+                        <td class="border border-black p-1">Ka. UPA. PP</td>
+                    </tr>
+                    <tr>
+                        <td class="border border-black p-1 text-left">Tanggal</td>
+                        <td class="border border-black p-1">27-7-2026</td>
+                        <td class="border border-black p-1"></td>
+                        <td class="border border-black p-1"></td>
+                        <td class="border border-black p-1"></td>
+                    </tr>
+                    <tr>
+                        <td class="border border-black p-1 text-left h-16 align-top">Paraf</td>
+                        <td class="border border-black p-1"></td>
+                        <td class="border border-black p-1"></td>
+                        <td class="border border-black p-1"></td>
+                        <td class="border border-black p-1"></td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</div>

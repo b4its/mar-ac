@@ -30,17 +30,17 @@
             <div class="mt-8 border border-bauhaus-black bg-bauhaus-paper">
                 <ul class="divide-y divide-bauhaus-black">
                     @foreach ($assets as $asset)
-                        <li class="flex flex-wrap items-center justify-between gap-3 p-5">
-                            <div>
+                        <li class="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+                            <div class="min-w-0">
                                 <p class="font-semibold">{{ $asset->nama_alat }}</p>
-                                <p class="text-xs font-bold uppercase tracking-widest text-bauhaus-blue">
+                                <p class="break-words text-xs font-bold uppercase tracking-widest text-bauhaus-blue">
                                     {{ $asset->kode_alat }} · {{ $asset->no_inventaris }}
                                 </p>
                                 <p class="mt-1 text-xs text-bauhaus-ink">
                                     {{ $asset->room?->building?->nama_gedung }} · {{ $asset->room?->nama_ruangan }} · {{ $asset->department?->nama_jurusan }}
                                 </p>
                             </div>
-                            <div class="flex items-center gap-3">
+                            <div class="flex flex-wrap items-center gap-3 sm:justify-end">
                                 <span class="border border-bauhaus-black px-3 py-1 font-display text-xs uppercase tracking-widest {{ $asset->status === 'baik' ? 'bg-bauhaus-yellow' : 'bg-bauhaus-paper text-red-600' }}">
                                     {{ $asset->status }}
                                 </span>
@@ -52,7 +52,7 @@
             </div>
         @endif
 
-        <div class="mt-8 flex gap-3">
+        <div class="mt-8 flex flex-wrap gap-3">
             <a href="{{ route('welcome') }}" class="bauhaus-btn bg-bauhaus-paper px-5 py-2.5 text-xs">← Beranda</a>
         </div>
     </div>

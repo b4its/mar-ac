@@ -18,19 +18,21 @@
         $attachments = $report->attachments;
     @endphp
 
+    <table class="doc-meta">
+        <tr>
+            <td class="left"><b>Laporan Kerusakan</b></td>
+            <td class="right"><b>Tanggal Revisi</b> : {{ $field('tanggal_revisi', '24 Januari 2024') }}<br><b>Tanggal Berlaku</b> : {{ $field('tanggal_berlaku', '24 Januari 2024') }}<br><b>Kode Dokumen</b> : {{ $field('kode_dokumen', 'FM-Polnes-11-02-03/R3') }}</td>
+        </tr>
+    </table>
+
     <table class="paper-form">
-        <tr>
-            <td colspan="5"><b>Laporan Kerusakan</b></td>
-            <td colspan="4"><b>Tanggal Revisi</b> : {{ $field('tanggal_revisi', '24 Januari 2024') }}<br><b>Tanggal Berlaku</b> : {{ $field('tanggal_berlaku', '24 Januari 2024') }}<br><b>Kode Dokumen</b> : {{ $field('kode_dokumen', 'FM-Polnes-11-02-03/R3') }}</td>
-        </tr>
-        <tr>
-            <td colspan="2" class="brand">
-                Politeknik Negeri Samarinda<br>
-                <span class="brand-logo">UPA.PP</span>
-            </td>
-            <td colspan="5" class="doc-title">Laporan Kerusakan</td>
-            <td colspan="2">Nomor : <b>{{ $field('nomor_laporan', $report->nomor_laporan) }}</b><br>Tanggal : {{ $report->tanggal_laporan?->format('d-m-Y') }}</td>
-        </tr>
+        @include('pdf.partials.doc-header', [
+            'colspan' => 9,
+            'title' => 'Laporan<br>Kerusakan',
+            'reportLabel' => 'No. Laporan kerusakan :',
+            'reportNumber' => $field('nomor_laporan', $report->nomor_laporan),
+            'logoSource' => $logoSource ?? null,
+        ])
         <tr>
             <td colspan="2">Nama Alat / Mesin</td>
             <td colspan="5">: {{ $field('nama_alat', $asset?->nama_alat) }}</td>
@@ -91,7 +93,12 @@
                     <tr>
                         @foreach ($row as $attachment)
                             <td>
-                                <img src="{{ $storageUrl($attachment) }}" alt="{{ $attachment->caption }}">
+                                @php($imageSource = $storageUrl($attachment))
+                                @if ($imageSource)
+                                    <img src="{{ $imageSource }}" alt="{{ $attachment->caption }}">
+                                @else
+                                    <div class="caption">Foto tidak tersedia</div>
+                                @endif
                                 <div class="caption">{{ $attachment->caption ?: 'Foto Kerusakan' }}</div>
                             </td>
                         @endforeach

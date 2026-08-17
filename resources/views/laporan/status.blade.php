@@ -2,7 +2,7 @@
     <div class="w-full max-w-3xl">
         <div class="mb-8 flex items-center gap-4">
             <x-bauhaus.shape type="square" color="yellow" class="h-12 w-12" />
-            <div>
+            <div class="min-w-0">
                 <h1 class="bauhaus-title text-2xl lg:text-4xl">Lacak Status Laporan</h1>
                 <p class="mt-1 text-xs font-bold uppercase tracking-[0.25em] text-bauhaus-blue">Masukkan nomor laporan</p>
             </div>
@@ -196,7 +196,7 @@
             </div>
         @endif
 
-        <div class="mt-8 flex gap-3">
+            <div class="mt-8 flex flex-wrap gap-3">
             <a href="{{ route('laporan.saya') }}" class="bauhaus-btn bg-bauhaus-paper px-5 py-2.5 text-xs">← Laporan Saya</a>
             <a href="{{ route('welcome') }}" class="bauhaus-btn bg-bauhaus-paper px-5 py-2.5 text-xs">← Beranda</a>
         </div>

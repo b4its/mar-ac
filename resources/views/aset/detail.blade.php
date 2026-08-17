@@ -2,9 +2,9 @@
     <div class="w-full max-w-3xl">
         <div class="mb-8 flex items-center gap-4">
             <x-bauhaus.shape type="square" color="yellow" class="h-12 w-12" />
-            <div>
-                <h1 class="bauhaus-title text-2xl lg:text-4xl">{{ $asset->nama_alat }}</h1>
-                <p class="mt-1 text-xs font-bold uppercase tracking-[0.25em] text-bauhaus-blue">{{ $asset->kode_alat }} · {{ $asset->no_inventaris }}</p>
+            <div class="min-w-0">
+                <h1 class="bauhaus-title break-words text-2xl lg:text-4xl">{{ $asset->nama_alat }}</h1>
+                <p class="mt-1 break-words text-xs font-bold uppercase tracking-[0.25em] text-bauhaus-blue">{{ $asset->kode_alat }} · {{ $asset->no_inventaris }}</p>
             </div>
         </div>
 
@@ -82,7 +82,7 @@
             @endif
         </div>
 
-        <div class="mt-8 flex gap-3">
+        <div class="mt-8 flex flex-wrap gap-3">
             <a href="{{ route('aset.index') }}" class="bauhaus-btn bg-bauhaus-paper px-5 py-2.5 text-xs">← Registrasi Aset</a>
             <a href="{{ route('welcome') }}" class="bauhaus-btn bg-bauhaus-paper px-5 py-2.5 text-xs">← Beranda</a>
         </div>
