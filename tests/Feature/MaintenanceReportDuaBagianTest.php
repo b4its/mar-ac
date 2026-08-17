@@ -129,7 +129,7 @@ it('laporan perawatan dua bagian menyimpan item dan lampiran terpisah', function
         ->and($report->attachments()->where('slot_key', 'indoor_cleaning_2')->exists())->toBeTrue()
         ->and($report->attachments()->where('slot_key', 'outdoor_cleaning_2')->exists())->toBeTrue()
         ->and($report->attachments()->where('slot_key', 'maintenance_card_2')->exists())->toBeTrue()
-        ->and($report->attachments()->where('slot_key', 'indoor_cleaning_2')->first()->caption)->toBe('Pencucian AC Indoor (Bagian 2)')
+        ->and($report->attachments()->where('slot_key', 'indoor_cleaning_2')->first()->caption)->toBe('Pencucian AC Indoor')
         ->and($report->attachments()->where('slot_key', 'indoor_cleaning_2')->first()->bagian())->toBe(2);
 });
 
@@ -617,11 +617,12 @@ it('pdf perawatan dua bagian dapat dirender', function () {
     ])->render();
 
     expect($html)
-        ->toContain('Bagian 1')
-        ->toContain('Bagian 2')
-        ->toContain('Pencucian AC Indoor (Bagian 2)')
+        ->not->toContain('Bagian 1')
+        ->not->toContain('Bagian 2')
         ->toContain('Cleaning AC 1')
-        ->toContain('Cleaning AC 2');
+        ->toContain('Cleaning AC 2')
+        ->toContain('AC Split 2 PK')
+        ->toContain('AC Split 1,5 PK');
 
     $this->get(route('laporan.pdf.perawatan', $report))->assertOk();
     $this->get(route('laporan.pdf.perawatan.file', [$report, 'download' => 1]))

@@ -49,6 +49,7 @@
     .paper-form td, .paper-form th { border: 1px solid #000; padding: 4px 6px; vertical-align: top; }
     .paper-form .doc-title { font-size: 16pt; font-weight: bold; text-align: center; text-transform: uppercase; letter-spacing: .5px; }
     .paper-form .section-title { font-weight: bold; background: #efefef; }
+    .paper-form .section-gap td { height: 6px; padding: 0; border-left: 0; border-right: 0; background: #f4f4f4; }
     .paper-form .center { text-align: center; }
     .paper-form .right { text-align: right; }
     .paper-form .muted { color: #333; font-size: 9pt; }

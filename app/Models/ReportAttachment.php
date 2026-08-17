@@ -51,23 +51,21 @@ class ReportAttachment extends Model
 
     public static function slotLabel(string $slotKey): string
     {
-        $bagian = '';
         $key = $slotKey;
 
         if (str_ends_with($key, '_2')) {
-            $bagian = ' (Bagian 2)';
             $key = substr($key, 0, -2);
         }
 
         if (str_starts_with($key, 'photo_')) {
-            return 'Foto Kerusakan '.str_replace('photo_', '', $key).$bagian;
+            return 'Foto Kerusakan '.str_replace('photo_', '', $key);
         }
 
         return match ($key) {
-            'indoor_cleaning' => 'Pencucian AC Indoor'.$bagian,
-            'outdoor_cleaning' => 'Pencucian AC Outdoor'.$bagian,
-            'maintenance_card' => 'Kartu Perawatan'.$bagian,
-            'lampiran_tambahan' => 'Lampiran Tambahan'.$bagian,
+            'indoor_cleaning' => 'Pencucian AC Indoor',
+            'outdoor_cleaning' => 'Pencucian AC Outdoor',
+            'maintenance_card' => 'Kartu Perawatan',
+            'lampiran_tambahan' => 'Lampiran Tambahan',
             default => $slotKey,
         };
     }

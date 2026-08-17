@@ -177,7 +177,7 @@ class MaintenanceReportController extends Controller
         foreach ($slots as $field => [$baseSlotKey, $baseCaption]) {
             $file = $data[$field];
             $slotKey = $bagian === 1 ? $baseSlotKey : $baseSlotKey.'_2';
-            $caption = $bagian === 1 ? $baseCaption : $baseCaption.' (Bagian 2)';
+            $caption = $baseCaption;
             $originalName = $file->getClientOriginalName();
             $mimeType = $file->getClientMimeType();
             $fileSize = $file->getSize();

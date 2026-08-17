@@ -491,9 +491,9 @@ class DatabaseSeeder extends Seeder
                     ['caption' => 'Pencucian AC Indoor', 'color' => [60, 130, 90]],
                     ['caption' => 'Pencucian AC Outdoor', 'color' => [130, 90, 60]],
                     ['caption' => 'Kartu Perawatan', 'color' => [90, 60, 130]],
-                    ['caption' => 'Pencucian AC Indoor (Bagian 2)', 'slot_key' => 'indoor_cleaning_2', 'color' => [60, 100, 160]],
-                    ['caption' => 'Pencucian AC Outdoor (Bagian 2)', 'slot_key' => 'outdoor_cleaning_2', 'color' => [160, 120, 60]],
-                    ['caption' => 'Kartu Perawatan (Bagian 2)', 'slot_key' => 'maintenance_card_2', 'color' => [100, 90, 160]],
+                    ['caption' => 'Pencucian AC Indoor', 'slot_key' => 'indoor_cleaning_2', 'color' => [60, 100, 160]],
+                    ['caption' => 'Pencucian AC Outdoor', 'slot_key' => 'outdoor_cleaning_2', 'color' => [160, 120, 60]],
+                    ['caption' => 'Kartu Perawatan', 'slot_key' => 'maintenance_card_2', 'color' => [100, 90, 160]],
                 ], $teknisi);
             } elseif ($i >= 4 && $i <= 97) {
                 $this->attachDemoImages($report, [

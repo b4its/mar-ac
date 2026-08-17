@@ -71,9 +71,9 @@
             'logoSource' => $logoSource ?? null,
         ])
         @foreach ($sections as $index => $section)
-            @if ($multi)
-                <tr class="section-title">
-                    <td colspan="9">Bagian {{ $section['bagian'] }}</td>
+            @if ($multi && $index > 0)
+                <tr class="section-gap">
+                    <td colspan="9"></td>
                 </tr>
             @endif
             <tr>
@@ -149,7 +149,7 @@
                     <div class="unit">Politeknik Negeri Samarinda<br>Unit Penunjang Akademik Perawatan dan Perbaikan</div>
                     <div class="address">Jalan Dr. Ciptomangunkusumo Kampus Gunung Panjang Samarinda 75131</div>
                 </div>
-                <div class="attachment-title">Kegiatan Perawatan AC Tahun {{ $report->tanggal_pelaksanaan?->format('Y') ?: date('Y') }}{{ $multi ? ' — Bagian '.$section['bagian'] : '' }}</div>
+                <div class="attachment-title">Kegiatan Perawatan AC Tahun {{ $report->tanggal_pelaksanaan?->format('Y') ?: date('Y') }}</div>
                 <div class="attachment-subtitle">Unit Kerja Pengguna AC : {{ $section['gedung'] ?: '-' }}</div>
                 <div class="attachment-location">Lokasi : {{ $section['lokasi'] ?: '-' }}</div>
                 <table class="attachment-grid">
