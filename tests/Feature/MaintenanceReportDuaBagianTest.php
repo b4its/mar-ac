@@ -81,7 +81,9 @@ it('halaman form perawatan menampilkan dua bagian dan filter lokasi', function (
         ->assertSee('+ Tambah Bagian')
         ->assertSee('Kartu Perawatan')
         ->assertSee('Pilih gedung terlebih dahulu')
-        ->assertSee('Lengkapi filter lokasi');
+        ->assertSee('Lengkapi filter lokasi')
+        ->assertSee('Lampiran Tambahan')
+        ->assertSee('name="foto_extra"', false);
 });
 
 it('laporan perawatan dua bagian menyimpan item dan lampiran terpisah', function () {
@@ -389,6 +391,88 @@ it('tanggal perawatan terakhir aset tidak mundur ke tanggal yang lebih lama', fu
     ])->assertRedirect();
 
     expect($this->asset1->fresh()->last_maintenance_date->toDateString())->toBe(now()->subDays(2)->toDateString());
+});
+
+it('lampiran tambahan bagian pertama (gambar + caption) tersimpan dan tampil di pdf', function () {
+    $this->actingAs($this->teknisi);
+
+    $this->post(route('laporan.perawatan.store'), [
+        'asset_id' => $this->asset1->id,
+        'jenis_pekerjaan' => 'Cleaning AC 1',
+        'tanggal_pelaksanaan' => now()->toDateString(),
+        'biaya' => '100000',
+        'foto_indoor' => makeTestImage('i1'),
+        'foto_outdoor' => makeTestImage('o1'),
+        'foto_kartu' => makeTestImage('k1'),
+        'foto_extra' => makeTestImage('extra'),
+        'caption_extra' => 'Foto kondisi pipa sebelum dibersihkan',
+    ])->assertRedirect();
+
+    $report = MaintenanceReport::latest('id')->first();
+
+    expect($report->attachments)->toHaveCount(4);
+
+    $extra = $report->attachments()->where('slot_key', 'lampiran_tambahan')->first();
+    expect($extra)->not->toBeNull()
+        ->and($extra->caption)->toBe('Foto kondisi pipa sebelum dibersihkan')
+        ->and($extra->bagian())->toBe(1);
+
+    $html = view('pdf.maintenance-report', [
+        'report' => $report->load(['asset.room.building', 'asset.department', 'items.asset.room.building', 'items.asset.department', 'attachments']),
+        'storageUrl' => fn () => '',
+        'logoSource' => '',
+    ])->render();
+
+    expect($html)->toContain('Foto kondisi pipa sebelum dibersihkan');
+});
+
+it('lampiran tambahan bagian kedua tersimpan dengan penanda bagian 2', function () {
+    $this->actingAs($this->teknisi);
+
+    $this->post(route('laporan.perawatan.store'), [
+        'asset_id' => $this->asset1->id,
+        'jenis_pekerjaan' => 'Cleaning AC 1',
+        'tanggal_pelaksanaan' => now()->toDateString(),
+        'biaya' => '100000',
+        'foto_indoor' => makeTestImage('i1'),
+        'foto_outdoor' => makeTestImage('o1'),
+        'foto_kartu' => makeTestImage('k1'),
+        'asset_id_2' => $this->asset2->id,
+        'jenis_pekerjaan_2' => 'Cleaning AC 2',
+        'tanggal_pelaksanaan_2' => now()->toDateString(),
+        'biaya_2' => '150000',
+        'foto_indoor_2' => makeTestImage('i2'),
+        'foto_outdoor_2' => makeTestImage('o2'),
+        'foto_kartu_2' => makeTestImage('k2'),
+        'foto_extra_2' => makeTestImage('extra2'),
+        'caption_extra_2' => 'Kondisi setelah pembersihan pada bagian 2',
+    ])->assertRedirect();
+
+    $report = MaintenanceReport::latest('id')->first();
+
+    expect($report->attachments)->toHaveCount(7);
+
+    $extra = $report->attachments()->where('slot_key', 'lampiran_tambahan_2')->first();
+    expect($extra)->not->toBeNull()
+        ->and($extra->caption)->toBe('Kondisi setelah pembersihan pada bagian 2')
+        ->and($extra->bagian())->toBe(2);
+});
+
+it('caption wajib diisi saat gambar lampiran tambahan dikirim', function () {
+    $this->actingAs($this->teknisi);
+
+    $this->post(route('laporan.perawatan.store'), [
+        'asset_id' => $this->asset1->id,
+        'jenis_pekerjaan' => 'Cleaning AC 1',
+        'tanggal_pelaksanaan' => now()->toDateString(),
+        'biaya' => '100000',
+        'foto_indoor' => makeTestImage('i1'),
+        'foto_outdoor' => makeTestImage('o1'),
+        'foto_kartu' => makeTestImage('k1'),
+        'foto_extra' => makeTestImage('extra'),
+    ])->assertSessionHasErrors(['caption_extra']);
+
+    expect(MaintenanceReport::count())->toBe(0);
 });
 
 it('searchable select aset terfilter oleh event lokasi', function () {

@@ -104,6 +104,8 @@
                                 @include('laporan.partials.photo-slot', ['field' => 'foto_kartu', 'caption' => 'Kartu Perawatan', 'bagian' => 1, 'required' => true])
                             </div>
                         </div>
+
+                        @include('laporan.partials.extra-attachment', ['field' => 'foto_extra', 'captionField' => 'caption_extra', 'bagian' => 1])
                     </div>
                 </section>
 
@@ -183,6 +185,8 @@
                                 @include('laporan.partials.photo-slot', ['field' => 'foto_kartu_2', 'caption' => 'Kartu Perawatan', 'bagian' => 2])
                             </div>
                         </div>
+
+                        @include('laporan.partials.extra-attachment', ['field' => 'foto_extra_2', 'captionField' => 'caption_extra_2', 'bagian' => 2])
                     </div>
                 </section>
             </div>

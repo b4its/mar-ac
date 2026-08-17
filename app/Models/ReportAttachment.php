@@ -67,6 +67,7 @@ class ReportAttachment extends Model
             'indoor_cleaning' => 'Pencucian AC Indoor'.$bagian,
             'outdoor_cleaning' => 'Pencucian AC Outdoor'.$bagian,
             'maintenance_card' => 'Kartu Perawatan'.$bagian,
+            'lampiran_tambahan' => 'Lampiran Tambahan'.$bagian,
             default => $slotKey,
         };
     }

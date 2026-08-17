@@ -63,9 +63,13 @@ class MaintenanceReportController extends Controller
             'foto_indoor' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'foto_outdoor' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'foto_kartu' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'foto_extra' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'caption_extra' => ['required_with:foto_extra', 'nullable', 'string', 'max:255'],
             'foto_indoor_2' => ['required_with:asset_id_2', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'foto_outdoor_2' => ['required_with:asset_id_2', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'foto_kartu_2' => ['required_with:asset_id_2', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'foto_extra_2' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'caption_extra_2' => ['required_with:foto_extra_2', 'nullable', 'string', 'max:255'],
         ]);
 
         $storedPaths = [];
@@ -96,6 +100,8 @@ class MaintenanceReportController extends Controller
                     'foto_kartu',
                     1,
                     $storedPaths,
+                    'foto_extra',
+                    'caption_extra',
                 ));
 
                 // Bagian kedua (opsional, maksimal dua bagian)
@@ -120,6 +126,8 @@ class MaintenanceReportController extends Controller
                         'foto_kartu_2',
                         2,
                         $storedPaths,
+                        'foto_extra_2',
+                        'caption_extra_2',
                     ));
                 }
 
@@ -140,7 +148,8 @@ class MaintenanceReportController extends Controller
     }
 
     /**
-     * Menyimpan tiga foto wajib pada satu bagian (section) laporan perawatan.
+     * Menyimpan tiga foto wajib pada satu bagian (section) laporan perawatan,
+     * plus satu lampiran tambahan opsional (gambar + caption) per bagian.
      *
      * @param  array<int, string>  $storedPaths
      * @return array<int, string>
@@ -154,6 +163,8 @@ class MaintenanceReportController extends Controller
         string $fieldCard,
         int $bagian,
         array $storedPaths,
+        ?string $fieldFotoExtra = null,
+        ?string $fieldCaptionExtra = null,
     ): array {
         $slots = [
             $fieldIndoor => ['indoor_cleaning', 'Pencucian AC Indoor'],
@@ -179,6 +190,26 @@ class MaintenanceReportController extends Controller
                 'original_name' => $originalName,
                 'mime_type' => $mimeType,
                 'file_size' => $fileSize,
+                'sort_order' => count($storedPaths) - 1,
+                'uploaded_by_user_id' => $request->user()->id,
+            ]);
+        }
+
+        if ($fieldFotoExtra && $fieldCaptionExtra && filled($data[$fieldFotoExtra] ?? null)) {
+            $file = $data[$fieldFotoExtra];
+            $slotKey = $bagian === 1 ? 'lampiran_tambahan' : 'lampiran_tambahan_2';
+            $caption = trim((string) ($data[$fieldCaptionExtra] ?? ''));
+            $path = PublicReportMedia::store($file, 'perawatan', $report->tanggal_pelaksanaan, $report->asset, $caption ?: 'Lampiran Tambahan', count($storedPaths));
+            $storedPaths[] = $path;
+
+            $report->attachments()->create([
+                'category' => 'maintenance_evidence',
+                'slot_key' => $slotKey,
+                'caption' => $caption,
+                'file_path' => $path,
+                'original_name' => $file->getClientOriginalName(),
+                'mime_type' => $file->getClientMimeType(),
+                'file_size' => $file->getSize(),
                 'sort_order' => count($storedPaths) - 1,
                 'uploaded_by_user_id' => $request->user()->id,
             ]);
