@@ -256,12 +256,17 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
-        // Setiap ruangan diisi 5 aset agar daftar alat/mesin pada form tidak
-        // hanya menampilkan satu pilihan setelah ruangan dipilih.
+        // Setiap ruangan diisi 5 aset. Kelima aset dalam satu ruangan memakai
+        // jurusan yang sama, sehingga setelah filter gedung → jurusan → ruangan
+        // dipilih, daftar alat/mesin menampilkan 5 pilihan (bukan hanya satu).
         $types = ['AC Split 1 PK', 'AC Split 1,5 PK', 'AC Split 2 PK', 'AC Cassette 3 PK', 'AC Standing 5 PK'];
         $kapasitasPool = ['1 PK', '1,5 PK', '2 PK', '3 PK', '5 PK'];
         $merks = ['Daikin', 'Panasonic', 'Gree', 'Sharp', 'LG', 'Samsung', 'Mitsubishi', 'Carrier', 'Midea', 'Toshiba'];
         $statuses = ['baik', 'baik', 'baik', 'rusak_ringan', 'rusak_sedang', 'rusak_berat'];
+
+        // Indeks jurusan (0=TI, 1=TAS, 2=AK, 3=TE, 4=TM) untuk ruangan 0..14
+        // agar sama dengan jurusan aset legacy yang sudah ada di ruangan itu.
+        $legacyDeptIndex = [2, 0, 2, 2, 2, 0, 0, 3, 1, 3, 2, 1, 1, 4, 2];
 
         $rows = [];
         $nextKode = 17;
@@ -271,6 +276,8 @@ class DatabaseSeeder extends Seeder
             // Ruangan 0..14 sudah memiliki 1 aset legacy (AC-001..AC-015).
             $existing = $roomIndex < 15 ? 1 : 0;
             $needed = 5 - $existing;
+
+            $deptIndex = $roomIndex < 15 ? $legacyDeptIndex[$roomIndex] : $roomIndex;
 
             for ($j = 0; $j < $needed; $j++) {
                 $i = $nextKode++;
@@ -283,7 +290,7 @@ class DatabaseSeeder extends Seeder
                     'kode_alat' => sprintf('AC-%03d', $i),
                     'no_inventaris' => sprintf('INV-%d-%04d', $tahun, $i),
                     'room_id' => $room->id,
-                    'department_id' => $departments[($counter - 1) % count($departments)]->id,
+                    'department_id' => $departments[$deptIndex]->id,
                     'kapasitas' => $kapasitasPool[($counter - 1) % count($kapasitasPool)],
                     'merk' => $merks[($counter - 1) % count($merks)],
                     'tahun_pemakaian' => $tahun,
