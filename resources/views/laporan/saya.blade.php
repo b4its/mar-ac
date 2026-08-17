@@ -245,20 +245,19 @@
             };
             
             const config = reportTypeLabels[type];
-            const badgeConfig = getStatusConfig(data.statuses?.[0]?.status);
             
             let html = `
                 <section class="border border-bauhaus-black bg-bauhaus-paper">
-                    <div class="flex items-center justify-between gap-4 border-b border-bauhaus-black" style="background-color: ${config.bgColor}; color: ${config.textColor}; padding: 1rem;">
-                        <div class="flex items-center gap-4" style="display: flex; align-items: center; gap: 1rem;">
+                    <div class="flex items-center justify-between gap-4" style="background-color: ${config.bgColor}; color: ${config.textColor}; padding: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 1rem;">
                             <x-bauhaus.shape type="${config.icon}" color="yellow" class="h-8 w-8" />
                             <h2 class="bauhaus-title text-lg" style="margin: 0;">${config.label}</h2>
                         </div>
-                        <span class="text-xs" style="color: ${config.textColor === '#fff' ? '#FFD700' : '#000'};">
+                        <span style="color: ${config.textColor === '#fff' ? '#FFD700' : '#000'};">
                             ${from} - ${to} dari ${total} laporan
                         </span>
                     </div>
-                    <ul class="divide-y divide-bauhaus-black" style="border-collapse: collapse;">
+                    <ul style="border-collapse: collapse;">
             `;
             
             reports.forEach(report => {
@@ -269,22 +268,27 @@
                 const badgeClass = isDisetujui ? 'bg-bauhaus-yellow' : (isDitolak ? 'bg-bauhaus-paper text-red-600' : 'bg-bauhaus-paper');
                 const badgeLabel = isDisetujui ? 'Disetujui' : (isDitolak ? 'Ditolak' : (status === 'revisi' ? 'Revisi' : 'Pending'));
                 
+                // Determine PDF link type based on report.jenis_kerusakan or report.jenis_pekerjaan presence
+                const pdfType = report.jenis_kerusakan !== undefined ? 
+                    (nomorLaporan.includes('KRS') ? 'kerusakan' : nomorLaporan.includes('PRW') ? 'perawatan' : 'perbaikan') : 
+                    'kerusakan';
+                
                 html += `
-                    <li style="padding: 1.25rem;">
+                    <li style="padding: 1.25rem; border-bottom: 1px solid #000;">
                         <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem;">
                             <div style="min-width: 0;">
                                 <p style="margin: 0 0 0.25rem; font-size: 0.875rem; font-weight: 600;">${report.nama_alat}</p>
-                                <p style="margin: 0; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; color: #2196F3;">${report.nomor_laporan} · ${report.jenis_kerusakan || report.jenis_pekerjaan}</p>
+                                <p style="margin: 0; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; color: #2196F3;">${report.nomor_laporan} · ${(report.jenis_kerusakan || report.jenis_pekerjaan) || '-'}</p>
                                 <p style="margin: 0.25rem 0 0; font-size: 0.75rem; color: #333;">
-                                    ${report.tanggal_laporan || report.tanggal_pelaksanaan ? new Date(report.tanggal_laporan || report.tanggal_pelaksanaan).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}
-                                    ${report.gedung !== '-' ? (' · ' + report.gedung) : ''}${report.ruangan && report.ruangan !== '-' ? (' · ' + report.ruangan) : ''}${report.jurusan && report.jurusan !== '-' ? (' · ' + report.jurusan) : ''}
+                                    ${(report.tanggal_laporan || report.tanggal_pelaksanaan) ? new Date(report.tanggal_laporan || report.tanggal_pelaksanaan).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}
+                                    ${report.gedung && report.gedung !== '-' ? (' · ' + report.gedung) : ''}${report.ruangan && report.ruangan !== '-' ? (' · ' + report.ruangan) : ''}${report.jurusan && report.jurusan !== '-' ? (' · ' + report.jurusan) : ''}
                                 </p>
                             </div>
                             <span style="border: 1px solid #000; padding: 0.25rem 0.75rem; font-family: monospace; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; ${badgeClass === 'bg-bauhaus-yellow' ? 'background-color: #FFD700;' : (badgeClass.includes('text-red-600') ? 'color: #dc2626;' : '')}">${badgeLabel}</span>
                         </div>
                         <div style="margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 0.75rem;">
                             <a href="/laporan/status?nomor=${report.nomor_laporan}" style="background-color: #fff; padding: 0.5rem 1rem; font-size: 0.75rem; border: 1px solid #000; text-decoration: none; color: #000;" class="bauhaus-btn">Lihat Detail</a>
-                            <a href="/laporan/pdf/${report.type || getTypeFromName(report.nomor_laporan)}/${report.id}" style="background-color: #000; padding: 0.5rem 1rem; font-size: 0.75rem; color: #fff; border: 1px solid #000; text-decoration: none;" class="bauhaus-btn">Preview PDF</a>
+                            <a href="/laporan/pdf/${pdfType}/${report.id}" style="background-color: #000; padding: 0.5rem 1rem; font-size: 0.75rem; color: #fff; border: 1px solid #000; text-decoration: none;" class="bauhaus-btn">Preview PDF</a>
                         </div>
                     </li>
                 `;
@@ -294,15 +298,15 @@
                     </ul>
                     ${last_page > 1 ? `
                         <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #000; padding: 1rem; background-color: #FFFEF0;">
-                            <div class="text-xs text-bauhaus-ink" style="margin: 0; font-size: 0.875rem;">
+                            <div style="margin: 0; font-size: 0.875rem;">
                                 Halaman ${current_page} dari ${last_page}
                             </div>
                             <div style="display: flex; gap: 0.5rem;">
                                 ${current_page === 1 ? '<span style="padding: 0.25rem 0.75rem; font-size: 0.75rem; color: #ccc;">&laquo; Prev</span>' : `
-                                    <button onclick="loadReports('${data.type}', ${current_page - 1})" style="padding: 0.25rem 0.75rem; font-size: 0.75rem; border: 1px solid #000; background: #fff; cursor: pointer;" class="bauhaus-btn">Prev</button>
+                                    <button onclick="loadReports('${type}', ${current_page - 1})" style="padding: 0.25rem 0.75rem; font-size: 0.75rem; border: 1px solid #000; background: #fff; cursor: pointer;" class="bauhaus-btn">Prev</button>
                                 `}
                                 ${current_page === last_page ? '<span style="padding: 0.25rem 0.75rem; font-size: 0.75rem; color: #ccc;">Next &raquo;</span>' : `
-                                    <button onclick="loadReports('${data.type}', ${current_page + 1})" style="padding: 0.25rem 0.75rem; font-size: 0.75rem; border: 1px solid #000; background: #fff; cursor: pointer;" class="bauhaus-btn">Next</button>
+                                    <button onclick="loadReports('${type}', ${current_page + 1})" style="padding: 0.25rem 0.75rem; font-size: 0.75rem; border: 1px solid #000; background: #fff; cursor: pointer;" class="bauhaus-btn">Next</button>
                                 `}
                             </div>
                         </div>
