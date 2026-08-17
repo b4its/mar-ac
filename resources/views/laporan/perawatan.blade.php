@@ -37,14 +37,9 @@
                         <label for="tanggal_pelaksanaan_1" class="mb-2 block font-display text-sm uppercase tracking-widest">Tanggal Pelaksanaan</label>
                         <input type="date" id="tanggal_pelaksanaan_1" name="tanggal_pelaksanaan" value="{{ old('tanggal_pelaksanaan', now()->toDateString()) }}" class="bauhaus-input" />
                     </div>
-                    <div>
-                        <label for="biaya_1" class="mb-2 block font-display text-sm uppercase tracking-widest">Biaya Material (Rp)</label>
-                        <input type="text" id="biaya_1" name="biaya" inputmode="numeric" value="{{ old('biaya') }}" class="bauhaus-input" data-money-input placeholder="0" />
-                        @error('biaya')<p class="mt-1 text-sm font-semibold text-red-600">{{ $message }}</p>@enderror
-                    </div>
-                    <div>
-                        <label for="biaya_jasa_1" class="mb-2 block font-display text-sm uppercase tracking-widest">Biaya Jasa (Rp)</label>
-                        <input type="text" id="biaya_jasa_1" name="biaya_jasa" inputmode="numeric" value="{{ old('biaya_jasa') }}" class="bauhaus-input" data-money-input placeholder="0" />
+                    <div class="hidden">
+                        <label for="biaya_jasa_1" class="mb-2 block font-display text-sm uppercase tracking-widest">Biaya Jasa (Admin Only)</label>
+                        <input type="text" id="biaya_jasa_1" name="biaya_jasa" inputmode="numeric" value="" class="bauhaus-input" data-money-input readonly />
                         @error('biaya_jasa')<p class="mt-1 text-sm font-semibold text-red-600">{{ $message }}</p>@enderror
                     </div>
                 </div>
@@ -53,7 +48,6 @@
                 <div class="border-t border-bauhaus-black pt-6">
                     <p class="mb-4 font-display text-sm uppercase tracking-widest">Foto Dokumentasi</p>
                     <div class="grid gap-6 md:grid-cols-2">
-                        
                         @php
                             $sections = [
                                 ['key' => 'section1_indoor', 'name' => 'foto_indoor', 'caption' => 'caption_indoor', 'id' => 'foto_indoor_1', 'preview' => 'preview_section1_indoor', 'img_id' => 'img_section1_indoor', 'title' => 'Pencucian AC Indoor *', 'placeholder' => 'Kondisi sebelum cleaning...'],
@@ -69,7 +63,6 @@
                                 
                                 <input type="file" id="{{ $section['id'] }}" name="{{ $section['name'] }}" accept="image/*" {{ in_array($section['key'], ['section1_indoor','section1_outdoor','section1_kartu']) ? 'required' : '' }} class="hidden" onchange="handlePhotoUpload(this, '{{ $section['key'] }}')">
                                 
-                                <!-- Placeholder -->
                                 <div id="{{ $section['preview'] }}" class="border-2 border-dashed border-slate-200 rounded-lg p-6 text-center min-h-[150px] flex flex-col items-center justify-center">
                                     <svg class="h-12 w-12 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -77,13 +70,10 @@
                                     <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">Klik untuk upload foto</p>
                                 </div>
                                 
-                                <!-- Image Preview -->
                                 <img id="{{ $section['img_id'] }}" src="" alt="" class="hidden mx-auto h-40 object-cover rounded-lg border border-slate-200 dark:border-slate-700" />
                                 
-                                <!-- Caption -->
                                 <input type="text" name="{{ $section['caption'] }}" placeholder="Caption (misal: {{ $section['placeholder'] }})" class="bauhaus-input mt-2 text-sm w-full" onblur="updateImageAlt(this)">
                                 
-                                <!-- Remove Button -->
                                 <button type="button" id="remove_{{ $section['key'] }}" onclick="removePhoto('{{ $section['key'] }}')" class="hidden mt-2 w-full bg-red-50 text-red-700 px-3 py-2 text-xs hover:bg-red-100 dark:bg-red-950 dark:text-red-300 dark:hover:bg-red-900 rounded-lg transition-colors">Hapus Foto</button>
                             </div>
                             @error($section['name'])<p class="mt-1 text-sm font-semibold text-red-600">{{ $message }}</p>@enderror
@@ -118,14 +108,9 @@
                         <label for="tanggal_pelaksanaan_2" class="mb-2 block font-display text-sm uppercase tracking-widest">Tanggal Pelaksanaan</label>
                         <input type="date" id="tanggal_pelaksanaan_2" name="tanggal_pelaksanaan_2" value="{{ old('tanggal_pelaksanaan_2', now()->toDateString()) }}" class="bauhaus-input" />
                     </div>
-                    <div>
-                        <label for="biaya_2" class="mb-2 block font-display text-sm uppercase tracking-widest">Biaya Material (Rp)</label>
-                        <input type="text" id="biaya_2" name="biaya_2" inputmode="numeric" value="{{ old('biaya_2') }}" class="bauhaus-input" data-money-input placeholder="0" />
-                        @error('biaya_2')<p class="mt-1 text-sm font-semibold text-red-600">{{ $message }}</p>@enderror
-                    </div>
-                    <div>
-                        <label for="biaya_jasa_2" class="mb-2 block font-display text-sm uppercase tracking-widest">Biaya Jasa (Rp)</label>
-                        <input type="text" id="biaya_jasa_2" name="biaya_jasa_2" inputmode="numeric" value="{{ old('biaya_jasa_2') }}" class="bauhaus-input" data-money-input placeholder="0" />
+                    <div class="hidden">
+                        <label for="biaya_jasa_2" class="mb-2 block font-display text-sm uppercase tracking-widest">Biaya Jasa (Admin Only)</label>
+                        <input type="text" id="biaya_jasa_2" name="biaya_jasa_2" inputmode="numeric" value="" class="bauhaus-input" data-money-input readonly />
                         @error('biaya_jasa_2')<p class="mt-1 text-sm font-semibold text-red-600">{{ $message }}</p>@enderror
                     </div>
                 </div>
@@ -183,14 +168,12 @@
             const file = input.files && input.files[0];
             if (!file) return;
             
-            // Validate file type
             if (!file.type.match(/image\/(png|jpg|jpeg|webp)/)) {
                 alert('❌ File harus berupa gambar PNG, JPG, atau WEBP!');
                 input.value = '';
                 return;
             }
             
-            // Validate file size (5MB)
             if (file.size > 5 * 1024 * 1024) {
                 alert('❌ Ukuran file terlalu besar! Maksimal 5MB (' + (file.size / 1024 / 1024).toFixed(2) + 'MB detected)');
                 input.value = '';
@@ -205,7 +188,6 @@
                 const removeBtn = document.getElementById('remove_' + prefix);
                 
                 if (imgElement && e.target.result) {
-                    // Revoke previous URL if exists
                     if (imgElement.src && imgElement.src.startsWith('blob:')) {
                         URL.revokeObjectURL(imgElement.src);
                     }
