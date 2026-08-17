@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class MaintenanceReport extends Model
@@ -67,5 +68,14 @@ class MaintenanceReport extends Model
     public function attachments(): MorphMany
     {
         return $this->morphMany(ReportAttachment::class, 'attachable')->orderBy('sort_order');
+    }
+
+    /**
+     * Bagian tambahan (section ke-2 dst) dari kartu laporan perawatan.
+     * Bagian pertama disimpan pada kolom utama model ini.
+     */
+    public function items(): HasMany
+    {
+        return $this->hasMany(MaintenanceReportItem::class)->orderBy('sort_order');
     }
 }

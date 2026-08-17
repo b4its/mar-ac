@@ -40,16 +40,33 @@ class ReportAttachment extends Model
         return Storage::disk('public')->url($this->file_path);
     }
 
+    /**
+     * Nomor bagian (section) pada kartu pelaporan perawatan.
+     * Bagian pertama memakai slot_key tanpa akhiran; bagian kedua memakai akhiran "_2".
+     */
+    public function bagian(): int
+    {
+        return str_ends_with((string) $this->slot_key, '_2') ? 2 : 1;
+    }
+
     public static function slotLabel(string $slotKey): string
     {
-        if (str_starts_with($slotKey, 'photo_')) {
-            return 'Foto Kerusakan '.str_replace('photo_', '', $slotKey);
+        $bagian = '';
+        $key = $slotKey;
+
+        if (str_ends_with($key, '_2')) {
+            $bagian = ' (Bagian 2)';
+            $key = substr($key, 0, -2);
         }
 
-        return match ($slotKey) {
-            'indoor_cleaning' => 'Pencucian AC Indoor',
-            'outdoor_cleaning' => 'Pencucian AC Outdoor',
-            'maintenance_card' => 'Kartu Perawatan',
+        if (str_starts_with($key, 'photo_')) {
+            return 'Foto Kerusakan '.str_replace('photo_', '', $key).$bagian;
+        }
+
+        return match ($key) {
+            'indoor_cleaning' => 'Pencucian AC Indoor'.$bagian,
+            'outdoor_cleaning' => 'Pencucian AC Outdoor'.$bagian,
+            'maintenance_card' => 'Kartu Perawatan'.$bagian,
             default => $slotKey,
         };
     }

@@ -35,6 +35,13 @@ class MaintenanceReportController extends Controller
             'tanggal_pelaksanaan' => ['nullable', 'date'],
             'biaya' => ['nullable', 'numeric', 'min:0'],
             'biaya_jasa' => ['nullable', 'numeric', 'min:0'],
+            // Bagian kedua (opsional, maksimal dua bagian dalam satu dokumen)
+            'asset_id_2' => ['nullable', 'exists:assets,id'],
+            'jenis_pekerjaan_2' => ['required_with:asset_id_2', 'string', 'max:255'],
+            'uraian_pekerjaan_2' => ['nullable', 'string', 'max:2000'],
+            'tanggal_pelaksanaan_2' => ['nullable', 'date'],
+            'biaya_2' => ['nullable', 'numeric', 'min:0'],
+            'biaya_jasa_2' => ['nullable', 'numeric', 'min:0'],
             'print_fields' => ['nullable', 'array'],
             'print_fields.tanggal_berlaku' => ['nullable', 'string', 'max:255'],
             'print_fields.kode_dokumen' => ['nullable', 'string', 'max:255'],
@@ -55,6 +62,9 @@ class MaintenanceReportController extends Controller
             'foto_indoor' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'foto_outdoor' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'foto_kartu' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'foto_indoor_2' => ['required_with:asset_id_2', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'foto_outdoor_2' => ['required_with:asset_id_2', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'foto_kartu_2' => ['required_with:asset_id_2', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ]);
 
         $storedPaths = [];
@@ -75,31 +85,41 @@ class MaintenanceReportController extends Controller
                     'status' => 'diajukan',
                 ]);
 
-                $slots = [
-                    'foto_indoor' => ['indoor_cleaning', 'Pencucian AC Indoor'],
-                    'foto_outdoor' => ['outdoor_cleaning', 'Pencucian AC Outdoor'],
-                    'foto_kartu' => ['maintenance_card', 'Kartu Perawatan'],
-                ];
+                // Bagian pertama (kolom utama laporan)
+                $storedPaths = array_merge($storedPaths, $this->storeSectionAttachments(
+                    $report,
+                    $request,
+                    $data,
+                    'foto_indoor',
+                    'foto_outdoor',
+                    'foto_kartu',
+                    1,
+                    $storedPaths,
+                ));
 
-                foreach ($slots as $field => [$slotKey, $caption]) {
-                    $file = $data[$field];
-                    $originalName = $file->getClientOriginalName();
-                    $mimeType = $file->getClientMimeType();
-                    $fileSize = $file->getSize();
-                    $path = PublicReportMedia::store($file, 'perawatan', $report->tanggal_pelaksanaan, $report->asset, $caption, count($storedPaths));
-                    $storedPaths[] = $path;
-
-                    $report->attachments()->create([
-                        'category' => 'maintenance_evidence',
-                        'slot_key' => $slotKey,
-                        'caption' => $caption,
-                        'file_path' => $path,
-                        'original_name' => $originalName,
-                        'mime_type' => $mimeType,
-                        'file_size' => $fileSize,
-                        'sort_order' => count($storedPaths) - 1,
-                        'uploaded_by_user_id' => $request->user()->id,
+                // Bagian kedua (opsional, maksimal dua bagian)
+                if (filled($data['asset_id_2'] ?? null)) {
+                    $report->items()->create([
+                        'bagian' => 2,
+                        'asset_id' => $data['asset_id_2'],
+                        'jenis_pekerjaan' => $data['jenis_pekerjaan_2'],
+                        'uraian_pekerjaan' => $data['uraian_pekerjaan_2'] ?? null,
+                        'tanggal_pelaksanaan' => $data['tanggal_pelaksanaan_2'] ?? now()->toDateString(),
+                        'biaya' => $data['biaya_2'] ?? 0,
+                        'biaya_jasa' => $data['biaya_jasa_2'] ?? 0,
+                        'sort_order' => 1,
                     ]);
+
+                    $storedPaths = array_merge($storedPaths, $this->storeSectionAttachments(
+                        $report,
+                        $request,
+                        $data,
+                        'foto_indoor_2',
+                        'foto_outdoor_2',
+                        'foto_kartu_2',
+                        2,
+                        $storedPaths,
+                    ));
                 }
 
                 return $report;
@@ -116,6 +136,54 @@ class MaintenanceReportController extends Controller
             ->with('nomor', $report->nomor_laporan);
     }
 
+    /**
+     * Menyimpan tiga foto wajib pada satu bagian (section) laporan perawatan.
+     *
+     * @param  array<int, string>  $storedPaths
+     * @return array<int, string>
+     */
+    private function storeSectionAttachments(
+        MaintenanceReport $report,
+        Request $request,
+        array $data,
+        string $fieldIndoor,
+        string $fieldOutdoor,
+        string $fieldCard,
+        int $bagian,
+        array $storedPaths,
+    ): array {
+        $slots = [
+            $fieldIndoor => ['indoor_cleaning', 'Pencucian AC Indoor'],
+            $fieldOutdoor => ['outdoor_cleaning', 'Pencucian AC Outdoor'],
+            $fieldCard => ['maintenance_card', 'Kartu Perawatan'],
+        ];
+
+        foreach ($slots as $field => [$baseSlotKey, $baseCaption]) {
+            $file = $data[$field];
+            $slotKey = $bagian === 1 ? $baseSlotKey : $baseSlotKey.'_2';
+            $caption = $bagian === 1 ? $baseCaption : $baseCaption.' (Bagian 2)';
+            $originalName = $file->getClientOriginalName();
+            $mimeType = $file->getClientMimeType();
+            $fileSize = $file->getSize();
+            $path = PublicReportMedia::store($file, 'perawatan', $report->tanggal_pelaksanaan, $report->asset, $caption, count($storedPaths));
+            $storedPaths[] = $path;
+
+            $report->attachments()->create([
+                'category' => 'maintenance_evidence',
+                'slot_key' => $slotKey,
+                'caption' => $caption,
+                'file_path' => $path,
+                'original_name' => $originalName,
+                'mime_type' => $mimeType,
+                'file_size' => $fileSize,
+                'sort_order' => count($storedPaths) - 1,
+                'uploaded_by_user_id' => $request->user()->id,
+            ]);
+        }
+
+        return $storedPaths;
+    }
+
     private function filledPrintFields(array $fields): ?array
     {
         $fields = collect($fields)
@@ -128,7 +196,7 @@ class MaintenanceReportController extends Controller
 
     private function normalizeMoneyInputs(Request $request): void
     {
-        foreach (['biaya', 'biaya_jasa'] as $field) {
+        foreach (['biaya', 'biaya_jasa', 'biaya_2', 'biaya_jasa_2'] as $field) {
             if ($request->has($field)) {
                 $request->merge([$field => preg_replace('/\D/', '', (string) $request->input($field)) ?: 0]);
             }
