@@ -11,6 +11,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Validator;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 class SearchableSelect extends Component
@@ -34,6 +35,16 @@ class SearchableSelect extends Component
     public bool $open = false;
 
     public bool $creating = false;
+
+    /**
+     * Filter lokasi bercabang (gedung → jurusan → ruangan) dari LokasiFilter.
+     * Hanya dipakai saat type = asset untuk mempersempit daftar aset.
+     */
+    public ?int $filterBuildingId = null;
+
+    public ?int $filterDepartmentId = null;
+
+    public ?int $filterRoomId = null;
 
     public string $newName = '';
 
@@ -101,6 +112,31 @@ class SearchableSelect extends Component
         }
     }
 
+    /**
+     * Menerapkan filter lokasi bercabang (gedung → jurusan → ruangan) dari LokasiFilter.
+     */
+    #[On('lokasi-filter-changed')]
+    public function applyLocationFilter($buildingId = null, $departmentId = null, $roomId = null): void
+    {
+        if ($this->type !== 'asset') {
+            return;
+        }
+
+        $this->filterBuildingId = $buildingId ? (int) $buildingId : null;
+        $this->filterDepartmentId = $departmentId ? (int) $departmentId : null;
+        $this->filterRoomId = $roomId ? (int) $roomId : null;
+
+        if ($this->selectedId) {
+            $record = $this->modelQuery()->find($this->selectedId);
+
+            if ($record && ! $this->assetMatchesFilters($record)) {
+                $this->selectedId = null;
+                $this->selectedLabel = '';
+                $this->search = '';
+            }
+        }
+    }
+
     public function selectOption(int $id): void
     {
         $record = $this->modelQuery()->findOrFail($id);
@@ -154,7 +190,7 @@ class SearchableSelect extends Component
                 'merk' => $this->newBrand,
                 'tahun_pemakaian' => $this->newYear,
                 'status' => $this->newStatus,
-                'last_maintenance_date' => $this->newLastMaintenanceDate,
+                'last_maintenance_date' => filled($this->newLastMaintenanceDate) ? $this->newLastMaintenanceDate : null,
                 'keterangan' => $this->newDescription,
             ], [
                 'nama_alat' => ['required', 'string', 'max:255'],
@@ -200,6 +236,7 @@ class SearchableSelect extends Component
                     });
                 }
             })
+            ->when($this->type === 'asset', fn ($query) => $this->applyLocationFilters($query))
             ->limit(10)
             ->get()
             ->map(fn (Model $record): array => [
@@ -262,6 +299,34 @@ class SearchableSelect extends Component
         }
 
         return Asset::query()->with(['room.building', 'department'])->orderBy('nama_alat');
+    }
+
+    /**
+     * Mempersempit query aset berdasarkan filter lokasi bercabang yang aktif.
+     */
+    private function applyLocationFilters($query)
+    {
+        return $query
+            ->when($this->filterBuildingId, fn ($query) => $query->whereHas('room.building', fn ($building) => $building->where('buildings.id', $this->filterBuildingId)))
+            ->when($this->filterDepartmentId, fn ($query) => $query->where('department_id', $this->filterDepartmentId))
+            ->when($this->filterRoomId, fn ($query) => $query->where('room_id', $this->filterRoomId));
+    }
+
+    private function assetMatchesFilters(Asset $asset): bool
+    {
+        if ($this->filterBuildingId && $asset->room?->building_id !== $this->filterBuildingId) {
+            return false;
+        }
+
+        if ($this->filterDepartmentId && $asset->department_id !== $this->filterDepartmentId) {
+            return false;
+        }
+
+        if ($this->filterRoomId && $asset->room_id !== $this->filterRoomId) {
+            return false;
+        }
+
+        return true;
     }
 
     private function formatLabel(Model $record): string
