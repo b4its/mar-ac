@@ -98,15 +98,18 @@ class LaporanSayaController extends Controller
             });
         }
         
-        $reports = $query->latest()->paginate($perPage)->through(function ($report) use ($type) {
+        $reports = $query->latest()->paginate($perPage);
+        
+        // Transform the reports data
+        $transformedReports = [];
+        foreach ($reports as $report) {
             if ($type === 'damage') {
-                return [
+                $transformedReports[] = [
                     'id' => $report->id,
                     'nomor_laporan' => $report->nomor_laporan,
                     'nama_alat' => $report->asset?->nama_alat ?? '-',
                     'jenis_kerusakan' => $report->jenis_kerusakan,
                     'tanggal_laporan' => $report->tanggal_laporan,
-                    'tingkat_kerusakan' => $report->tingkat_kerusakan,
                     'status' => $report->status,
                     'gedung' => $report->asset?->room?->building?->nama_gedung ?? '-',
                     'ruangan' => $report->asset?->room?->nama_ruangan ?? '-',
@@ -114,7 +117,7 @@ class LaporanSayaController extends Controller
                     'user_name' => $report->pelapor?->name ?? '-',
                 ];
             } elseif ($type === 'maintenance') {
-                return [
+                $transformedReports[] = [
                     'id' => $report->id,
                     'nomor_laporan' => $report->nomor_laporan,
                     'nama_alat' => $report->asset?->nama_alat ?? '-',
@@ -127,7 +130,7 @@ class LaporanSayaController extends Controller
                     'user_name' => $report->pelapor?->name ?? '-',
                 ];
             } else { // repair
-                return [
+                $transformedReports[] = [
                     'id' => $report->id,
                     'nomor_laporan' => $report->nomor_laporan,
                     'nama_alat' => $report->asset?->nama_alat ?? '-',
@@ -141,16 +144,17 @@ class LaporanSayaController extends Controller
                     'user_name' => $report->teknisi?->name ?? '-',
                 ];
             }
-        });
+        }
         
         return response()->json([
-            'data' => $reports->items(),
+            'data' => $transformedReports,
             'current_page' => $reports->currentPage(),
             'last_page' => $reports->lastPage(),
             'total' => $reports->total(),
             'per_page' => $reports->perPage(),
             'from' => $reports->firstItem(),
             'to' => $reports->lastItem(),
+            'type' => $type,
         ]);
     }
 
