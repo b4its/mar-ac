@@ -21,12 +21,10 @@ class LaporanSayaController extends Controller
     {
         $userId = Auth::id();
         
-        // Get all buildings, departments, rooms for filters
-        $buildings = Building::with(['departments' => function($q) {
-            $q->withCount('rooms')->orderBy('nama_jurusan');
-        }], 'departments.rooms')->get();
-        $allDepartments = Department::with(['building', 'rooms'])->orderBy('nama_jurusan')->get();
-        $allRooms = Room::with(['building', 'department'])->orderBy('nama_ruangan')->get();
+        // Get all buildings, departments, rooms for filters (simplified to avoid missing columns)
+        $buildings = Building::all();
+        $allDepartments = Department::with('building')->orderBy('nama_jurusan')->get();
+        $allRooms = Room::all();
 
         return view('laporan.saya', [
             'buildings' => $buildings,
