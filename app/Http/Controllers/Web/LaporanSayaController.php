@@ -38,124 +38,137 @@ class LaporanSayaController extends Controller
      */
     public function getReports(Request $request): JsonResponse
     {
-        $userId = Auth::id();
-        $type = $request->input('type', 'damage'); // damage, maintenance, repair
-        $search = $request->input('search', '');
-        $page = $request->input('page', 1);
-        $perPage = (int) $request->input('per_page', 10);
-        
-        // Filter parameters
-        $buildingId = $request->input('building_id');
-        $departmentId = $request->input('department_id');
-        $roomId = $request->input('room_id');
-        
-        $reportTypeMap = [
-            'damage' => DamageReport::with(['asset', 'repairReport', 'pelapor']),
-            'maintenance' => MaintenanceReport::with(['asset', 'items.asset.room.building', 'items.asset.department', 'pelapor']),
-            'repair' => RepairReport::with(['asset', 'damageReport', 'pelapor', 'teknisi']),
-        ];
-        
-        $query = $reportTypeMap[$type] ?? $reportTypeMap['damage'];
-        
-        // Apply user filter based on report type
-        if ($type === 'damage' || $type === 'maintenance') {
-            $query->where('pelapor_user_id', $userId);
-        } elseif ($type === 'repair') {
-            $query->where(function ($q) use ($userId) {
-                $q->where('teknisi_user_id', $userId)
-                  ->orWhereHas('damageReport', fn ($qr) => $qr->where('pelapor_user_id', $userId));
-            });
-        }
-        
-        // Search filter
-        if (!empty($search)) {
-            $query->where(function ($q) use ($search) {
-                $q->where('nomor_laporan', 'like', "%{$search}%")
-                  ->orWhere('jenis_kerusakan', 'like', "%{$search}%")
-                  ->orWhere('jenis_pekerjaan', 'like', "%{$search}%")
-                  ->orWhereHas('asset', function ($q2) use ($search) {
-                      $q2->where('nama_alat', 'like', "%{$search}%");
-                  });
-            });
-        }
-        
-        // Location filters
-        if ($buildingId) {
-            $query->whereHas('asset.room.building', function ($q2) use ($buildingId) {
-                $q2->where('id', $buildingId);
-            });
-        }
-        
-        if ($departmentId) {
-            $query->whereHas('asset.department', function ($q2) use ($departmentId) {
-                $q2->where('id', $departmentId);
-            });
-        }
-        
-        if ($roomId) {
-            $query->whereHas('asset.room', function ($q2) use ($roomId) {
-                $q2->where('id', $roomId);
-            });
-        }
-        
-        $reports = $query->latest()->paginate($perPage);
-        
-        // Transform the reports data
-        $transformedReports = [];
-        foreach ($reports as $report) {
-            if ($type === 'damage') {
-                $transformedReports[] = [
-                    'id' => $report->id,
-                    'nomor_laporan' => $report->nomor_laporan,
-                    'nama_alat' => $report->asset?->nama_alat ?? '-',
-                    'jenis_kerusakan' => $report->jenis_kerusakan,
-                    'tanggal_laporan' => $report->tanggal_laporan,
-                    'status' => $report->status,
-                    'gedung' => $report->asset?->room?->building?->nama_gedung ?? '-',
-                    'ruangan' => $report->asset?->room?->nama_ruangan ?? '-',
-                    'jurusan' => $report->asset?->department?->nama_jurusan ?? '-',
-                    'user_name' => $report->pelapor?->name ?? '-',
-                ];
-            } elseif ($type === 'maintenance') {
-                $transformedReports[] = [
-                    'id' => $report->id,
-                    'nomor_laporan' => $report->nomor_laporan,
-                    'nama_alat' => $report->asset?->nama_alat ?? '-',
-                    'jenis_pekerjaan' => $report->jenis_pekerjaan,
-                    'tanggal_pelaksanaan' => $report->tanggal_pelaksanaan,
-                    'status' => $report->status,
-                    'gedung' => $report->asset?->room?->building?->nama_gedung ?? '-',
-                    'ruangan' => $report->asset?->room?->nama_ruangan ?? '-',
-                    'jurusan' => $report->asset?->department?->nama_jurusan ?? '-',
-                    'user_name' => $report->pelapor?->name ?? '-',
-                ];
-            } else { // repair
-                $transformedReports[] = [
-                    'id' => $report->id,
-                    'nomor_laporan' => $report->nomor_laporan,
-                    'nama_alat' => $report->asset?->nama_alat ?? '-',
-                    'jenis_pekerjaan' => $report->jenis_pekerjaan,
-                    'tanggal_pelaksanaan' => $report->tanggal_pelaksanaan,
-                    'status' => $report->status,
-                    'nomor_kerusakan' => $report->damageReport?->nomor_laporan ?? '-',
-                    'gedung' => $report->asset?->room?->building?->nama_gedung ?? '-',
-                    'ruangan' => $report->asset?->room?->nama_ruangan ?? '-',
-                    'jurusan' => $report->asset?->department?->nama_jurusan ?? '-',
-                    'user_name' => $report->teknisi?->name ?? '-',
-                ];
+        try {
+            $userId = Auth::id();
+            if (!$userId) {
+                return response()->json(['error' => 'Unauthorized'], 401);
             }
+            
+            $type = $request->input('type', 'damage'); // damage, maintenance, repair
+            $search = $request->input('search', '');
+            $page = (int) $request->input('page', 1);
+            $perPage = (int) $request->input('per_page', 10);
+            
+            // Filter parameters
+            $buildingId = $request->input('building_id');
+            $departmentId = $request->input('department_id');
+            $roomId = $request->input('room_id');
+            
+            $reportTypeMap = [
+                'damage' => DamageReport::with(['asset', 'repairReport', 'pelapor']),
+                'maintenance' => MaintenanceReport::with(['asset', 'pelapor']),
+                'repair' => RepairReport::with(['asset', 'damageReport', 'pelapor', 'teknisi']),
+            ];
+            
+            $query = $reportTypeMap[$type] ?? $reportTypeMap['damage'];
+            
+            // Apply user filter based on report type
+            if ($type === 'damage' || $type === 'maintenance') {
+                $query->where('pelapor_user_id', $userId);
+            } elseif ($type === 'repair') {
+                $query->where(function ($q) use ($userId) {
+                    $q->where('teknisi_user_id', $userId)
+                      ->orWhereHas('damageReport', fn ($qr) => $qr->where('pelapor_user_id', $userId));
+                });
+            }
+            
+            // Search filter
+            if (!empty($search)) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('nomor_laporan', 'like', "%{$search}%")
+                      ->orWhere('jenis_kerusakan', 'like', "%{$search}%")
+                      ->orWhere('jenis_pekerjaan', 'like', "%{$search}%")
+                      ->orWhereHas('asset', function ($q2) use ($search) {
+                          $q2->where('nama_alat', 'like', "%{$search}%");
+                      });
+                });
+            }
+            
+            // Location filters - only for damage and repair reports (maintenance uses different structure)
+            if ($buildingId && $type !== 'maintenance') {
+                $query->whereHas('asset.room.building', function ($q2) use ($buildingId) {
+                    $q2->where('id', $buildingId);
+                });
+            }
+            
+            if ($departmentId && $type !== 'maintenance') {
+                $query->whereHas('asset.department', function ($q2) use ($departmentId) {
+                    $q2->where('id', $departmentId);
+                });
+            }
+            
+            if ($roomId && $type !== 'maintenance') {
+                $query->whereHas('asset.room', function ($q2) use ($roomId) {
+                    $q2->where('id', $roomId);
+                });
+            }
+            
+            $reports = $query->latest()->paginate($perPage);
+            
+            // Transform the reports data
+            $transformedReports = [];
+            foreach ($reports as $report) {
+                if ($type === 'damage') {
+                    $transformedReports[] = [
+                        'id' => $report->id,
+                        'nomor_laporan' => $report->nomor_laporan,
+                        'nama_alat' => $report->asset?->nama_alat ?? '-',
+                        'jenis_kerusakan' => $report->jenis_kerusakan,
+                        'tanggal_laporan' => $report->tanggal_laporan,
+                        'status' => $report->status,
+                        'gedung' => $report->asset?->room?->building?->nama_gedung ?? '-',
+                        'ruangan' => $report->asset?->room?->nama_ruangan ?? '-',
+                        'jurusan' => $report->asset?->department?->nama_jurusan ?? '-',
+                        'user_name' => $report->pelapor?->name ?? '-',
+                    ];
+                } elseif ($type === 'maintenance') {
+                    $transformedReports[] = [
+                        'id' => $report->id,
+                        'nomor_laporan' => $report->nomor_laporan,
+                        'nama_alat' => $report->asset?->nama_alat ?? '-',
+                        'jenis_pekerjaan' => $report->jenis_pekerjaan,
+                        'tanggal_pelaksanaan' => $report->tanggal_pelaksanaan,
+                        'status' => $report->status,
+                        'gedung' => '-',
+                        'ruangan' => '-',
+                        'jurusan' => '-',
+                        'user_name' => $report->pelapor?->name ?? '-',
+                    ];
+                } else { // repair
+                    $transformedReports[] = [
+                        'id' => $report->id,
+                        'nomor_laporan' => $report->nomor_laporan,
+                        'nama_alat' => $report->asset?->nama_alat ?? '-',
+                        'jenis_pekerjaan' => $report->jenis_pekerjaan,
+                        'tanggal_pelaksanaan' => $report->tanggal_pelaksanaan,
+                        'status' => $report->status,
+                        'nomor_kerusakan' => $report->damageReport?->nomor_laporan ?? '-',
+                        'gedung' => $report->asset?->room?->building?->nama_gedung ?? '-',
+                        'ruangan' => $report->asset?->room?->nama_ruangan ?? '-',
+                        'jurusan' => $report->asset?->department?->nama_jurusan ?? '-',
+                        'user_name' => $report->teknisi?->name ?? '-',
+                    ];
+                }
+            }
+            
+            return response()->json([
+                'data' => $transformedReports,
+                'current_page' => $reports->currentPage(),
+                'last_page' => $reports->lastPage(),
+                'total' => $reports->total(),
+                'per_page' => $reports->perPage(),
+                'from' => $reports->firstItem(),
+                'to' => $reports->lastItem(),
+                'type' => $type,
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Error in LaporanSayaController::getReports: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Internal Server Error',
+                'message' => config('app.debug') ? $e->getMessage() : 'An error occurred'
+            ], 500);
         }
-        
-        return response()->json([
-            'data' => $transformedReports,
-            'current_page' => $reports->currentPage(),
-            'last_page' => $reports->lastPage(),
-            'total' => $reports->total(),
-            'per_page' => $reports->perPage(),
-            'from' => $reports->firstItem(),
-            'to' => $reports->lastItem(),
-            'type' => $type,
-        ]);
     }
 
     /**
