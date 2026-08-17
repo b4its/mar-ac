@@ -38,6 +38,19 @@ class SearchableSelect extends Component
     public bool $creating = false;
 
     /**
+     * Nama pemilih lain (nama field) di form yang sama. Saat aset dipilih di
+     * pemilih ini, aset tersebut dikeluarkan dari daftar pemilih lain, dan
+     * sebaliknya — mencegah data aset duplikat dalam satu form.
+     */
+    public ?string $partnerName = null;
+
+    /**
+     * Id aset yang dipilih pada pemilih pasangan dan karenanya tidak boleh
+     * dipilih di pemilih ini.
+     */
+    public ?int $excludeId = null;
+
+    /**
      * Filter lokasi bercabang (gedung → jurusan → ruangan) dari LokasiFilter.
      * Hanya dipakai saat type = asset untuk mempersempit daftar aset.
      */
@@ -100,6 +113,8 @@ class SearchableSelect extends Component
         bool $required = false,
         bool $requireRoom = false,
         bool $showCondition = false,
+        ?string $partner = null,
+        ?int $exclude = null,
     ): void {
         $this->type = $type;
         $this->name = $name;
@@ -109,6 +124,8 @@ class SearchableSelect extends Component
         $this->required = $required;
         $this->requireRoom = $requireRoom;
         $this->showCondition = $showCondition;
+        $this->partnerName = $partner;
+        $this->excludeId = $exclude;
 
         if ($selected) {
             $record = $this->modelQuery()->find($selected);
@@ -126,6 +143,43 @@ class SearchableSelect extends Component
 
         if ($this->search !== $this->selectedLabel) {
             $this->selectedId = null;
+            $this->syncPartnerExclude(null);
+        }
+    }
+
+    /**
+     * Menyinkronkan pilihan ke pemilih pasangan: pilihan alat yang baru
+     * dikirim agar dikeluarkan dari daftar pemilih lain (tidak ada duplikat
+     * alat/mesin dalam satu form), dan null saat pilihan dibatalkan.
+     */
+    private function syncPartnerExclude(?int $value): void
+    {
+        if ($this->type !== 'asset' || ! $this->partnerName) {
+            return;
+        }
+
+        $this->dispatch('exclude-asset', target: $this->partnerName, assetId: $value);
+    }
+
+    /**
+     * Menerima pilihan aset dari pemilih pasangan: aset tersebut dikecualikan
+     * dari daftar opsi, dan pilihan yang sama ikut dibersihkan jika sedang
+     * dipilih di pemilih ini.
+     */
+    #[On('exclude-asset')]
+    public function excludeAsset(string $target, ?int $assetId): void
+    {
+        if ($this->type !== 'asset' || $target !== $this->name) {
+            return;
+        }
+
+        $this->excludeId = $assetId ? (int) $assetId : null;
+
+        if ($this->excludeId && $this->selectedId === $this->excludeId) {
+            $this->selectedId = null;
+            $this->selectedLabel = '';
+            $this->search = '';
+            $this->syncPartnerExclude(null);
         }
     }
 
@@ -147,6 +201,7 @@ class SearchableSelect extends Component
             $this->selectedId = null;
             $this->selectedLabel = '';
             $this->search = '';
+            $this->syncPartnerExclude(null);
 
             return;
         }
@@ -158,12 +213,17 @@ class SearchableSelect extends Component
                 $this->selectedId = null;
                 $this->selectedLabel = '';
                 $this->search = '';
+                $this->syncPartnerExclude(null);
             }
         }
     }
 
     public function selectOption(int $id): void
     {
+        if ($this->type === 'asset' && $this->excludeId && $this->excludeId === $id) {
+            return;
+        }
+
         $record = $this->modelQuery()->findOrFail($id);
 
         $this->selectedId = $record->id;
@@ -171,6 +231,7 @@ class SearchableSelect extends Component
         $this->search = $this->selectedLabel;
         $this->open = false;
         $this->creating = false;
+        $this->syncPartnerExclude($this->selectedId);
     }
 
     public function startCreate(): void
@@ -265,7 +326,11 @@ class SearchableSelect extends Component
                     });
                 }
             })
-            ->when($this->type === 'asset', fn ($query) => $this->applyLocationFilters($query))
+            ->when($this->type === 'asset', function ($query) {
+                $query = $this->applyLocationFilters($query);
+
+                return $query->when($this->excludeId, fn ($q) => $q->where('id', '!=', $this->excludeId));
+            })
             ->limit(10)
             ->get()
             ->map(fn (Model $record): array => [

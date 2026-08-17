@@ -49,6 +49,7 @@
                                 required
                                 :require-room="true"
                                 :show-condition="true"
+                                partner="asset_id_2"
                                 wire:key="maintenance-asset-select"
                             />
                             @error('asset_id')<p class="mt-1 text-sm font-semibold text-red-600">{{ $message }}</p>@enderror
@@ -131,6 +132,7 @@
                                 :selected="old('asset_id_2') ? (int) old('asset_id_2') : null"
                                 :require-room="true"
                                 :show-condition="true"
+                                partner="asset_id"
                                 wire:key="maintenance-asset-select-2"
                             />
                             @error('asset_id_2')<p class="mt-1 text-sm font-semibold text-red-600">{{ $message }}</p>@enderror

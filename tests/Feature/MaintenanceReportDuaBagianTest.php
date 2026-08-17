@@ -509,6 +509,78 @@ it('searchable select aset membersihkan pilihan yang tidak cocok dengan filter',
         ->assertSet('search', '');
 });
 
+it('memilih alat pada bagian pertama mengabarkan pemilih bagian kedua agar mengecualikannya', function () {
+    $this->actingAs($this->teknisi);
+
+    Livewire::test(SearchableSelect::class, [
+        'type' => 'asset',
+        'name' => 'asset_id',
+        'partner' => 'asset_id_2',
+    ])
+        ->call('selectOption', $this->asset1->id)
+        ->assertSet('selectedId', $this->asset1->id)
+        ->assertDispatched('exclude-asset', target: 'asset_id_2', assetId: $this->asset1->id);
+});
+
+it('alat yang dipilih pada bagian pertama tidak dapat dipilih pada bagian kedua', function () {
+    $this->actingAs($this->teknisi);
+
+    Livewire::test(SearchableSelect::class, [
+        'type' => 'asset',
+        'name' => 'asset_id_2',
+        'partner' => 'asset_id',
+    ])
+        ->call('selectOption', $this->asset2->id)
+        ->dispatch('exclude-asset', target: 'asset_id_2', assetId: $this->asset2->id)
+        ->assertSet('excludeId', $this->asset2->id)
+        ->assertSet('selectedId', null)
+        ->assertSet('selectedLabel', '')
+        ->assertSet('search', '')
+        ->set('search', 'AC')
+        ->assertSee('AC Split 2 PK - AC-1')
+        ->assertDontSee('AC Split 1,5 PK - AC-2')
+        ->call('selectOption', $this->asset2->id)
+        ->assertSet('selectedId', null);
+});
+
+it('event pengecualian hanya diproses oleh pemilih pasangan yang dituju', function () {
+    $this->actingAs($this->teknisi);
+
+    Livewire::test(SearchableSelect::class, [
+        'type' => 'asset',
+        'name' => 'asset_id_2',
+        'partner' => 'asset_id',
+    ])
+        ->dispatch('exclude-asset', target: 'pemilih_lain', assetId: $this->asset1->id)
+        ->assertSet('excludeId', null)
+        ->dispatch('exclude-asset', target: 'asset_id_2', assetId: $this->asset1->id)
+        ->assertSet('excludeId', $this->asset1->id)
+        ->dispatch('exclude-asset', target: 'asset_id_2', assetId: null)
+        ->assertSet('excludeId', null);
+});
+
+it('laporan perawatan ditolak saat alat bagian pertama dan kedua sama', function () {
+    $this->actingAs($this->teknisi);
+
+    $this->post(route('laporan.perawatan.store'), [
+        'asset_id' => $this->asset1->id,
+        'jenis_pekerjaan' => 'Cleaning AC 1',
+        'tanggal_pelaksanaan' => now()->toDateString(),
+        'biaya' => '100000',
+        'foto_indoor' => makeTestImage('i1'),
+        'foto_outdoor' => makeTestImage('o1'),
+        'foto_kartu' => makeTestImage('k1'),
+        'asset_id_2' => $this->asset1->id,
+        'jenis_pekerjaan_2' => 'Cleaning AC 1 lagi',
+        'tanggal_pelaksanaan_2' => now()->toDateString(),
+        'foto_indoor_2' => makeTestImage('i2'),
+        'foto_outdoor_2' => makeTestImage('o2'),
+        'foto_kartu_2' => makeTestImage('k2'),
+    ])->assertSessionHasErrors(['asset_id_2']);
+
+    expect(MaintenanceReport::count())->toBe(0);
+});
+
 it('pdf perawatan dua bagian dapat dirender', function () {
     $this->actingAs($this->teknisi);
 
