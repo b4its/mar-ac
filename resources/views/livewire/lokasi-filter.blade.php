@@ -1,13 +1,18 @@
 <div class="grid gap-4 md:grid-cols-3" data-lokasi-filter>
     {{-- Gedung --}}
     <div class="relative" wire:click.outside="$set('openBuilding', false)">
-        <label class="mb-2 block font-display text-sm uppercase tracking-widest">Nama Gedung</label>
+        <label class="mb-2 block font-display text-sm uppercase tracking-widest">
+            1. Pilih Gedung
+            @if ($buildingId)
+                <span class="ml-1 font-bold normal-case text-emerald-600">✓</span>
+            @endif
+        </label>
         <div class="relative">
             <input
                 type="search"
                 wire:model.live.debounce.250ms="searchBuilding"
                 wire:focus="$set('openBuilding', true)"
-                placeholder="Cari gedung..."
+                placeholder="Pilih gedung..."
                 autocomplete="off"
                 class="bauhaus-input pr-11"
             >
@@ -59,13 +64,18 @@
 
     {{-- Jurusan --}}
     <div class="relative" wire:click.outside="$set('openDepartment', false)">
-        <label class="mb-2 block font-display text-sm uppercase tracking-widest">Jurusan</label>
+        <label class="mb-2 block font-display text-sm uppercase tracking-widest">
+            2. Pilih Jurusan
+            @if ($departmentId)
+                <span class="ml-1 font-bold normal-case text-emerald-600">✓</span>
+            @endif
+        </label>
         <div class="relative">
             <input
                 type="search"
                 wire:model.live.debounce.250ms="searchDepartment"
                 wire:focus="$set('openDepartment', true)"
-                placeholder="{{ $this->departmentLocked ? 'Pilih gedung terlebih dahulu...' : 'Cari jurusan...' }}"
+                placeholder="{{ $this->departmentLocked ? 'Pilih gedung terlebih dahulu...' : 'Pilih jurusan...' }}"
                 autocomplete="off"
                 class="bauhaus-input pr-11"
                 @if ($this->departmentLocked) disabled @endif
@@ -119,13 +129,18 @@
 
     {{-- Ruangan --}}
     <div class="relative" wire:click.outside="$set('openRoom', false)">
-        <label class="mb-2 block font-display text-sm uppercase tracking-widest">Ruangan</label>
+        <label class="mb-2 block font-display text-sm uppercase tracking-widest">
+            3. Pilih Ruangan
+            @if ($roomId)
+                <span class="ml-1 font-bold normal-case text-emerald-600">✓</span>
+            @endif
+        </label>
         <div class="relative">
             <input
                 type="search"
                 wire:model.live.debounce.250ms="searchRoom"
                 wire:focus="$set('openRoom', true)"
-                placeholder="{{ $this->roomLocked ? ($this->departmentLocked ? 'Pilih gedung terlebih dahulu...' : 'Pilih jurusan terlebih dahulu...') : 'Cari ruangan...' }}"
+                placeholder="{{ $this->roomLocked ? ($this->departmentLocked ? 'Pilih gedung terlebih dahulu...' : 'Pilih jurusan terlebih dahulu...') : 'Pilih ruangan...' }}"
                 autocomplete="off"
                 class="bauhaus-input pr-11"
                 @if ($this->roomLocked) disabled @endif

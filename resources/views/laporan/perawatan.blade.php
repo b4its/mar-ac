@@ -14,7 +14,8 @@
 
             {{-- Filter lokasi bercabang: Gedung → Jurusan → Ruangan --}}
             <div class="mb-8 border-b border-bauhaus-black pb-6">
-                <p class="mb-4 font-display text-sm uppercase tracking-widest">Filter Lokasi Aset <span class="text-slate-500">(wajib — pilih berurutan: gedung → jurusan → ruangan, sebelum memilih alat)</span></p>
+                <p class="mb-1 font-display text-sm uppercase tracking-widest">Pilih Lokasi Alat</p>
+                <p class="mb-4 text-sm text-slate-500">Ikuti urutannya, ya: pilih gedung, lalu jurusan, lalu ruangan. Daftar alat muncul otomatis setelah ruangan dipilih.</p>
                 <livewire:lokasi-filter wire:key="maintenance-lokasi-filter" />
             </div>
 
@@ -23,8 +24,8 @@
                 <livewire:searchable-select
                     type="vendor"
                     name="vendor_id"
-                    label="Vendor / Pelaksana (opsional)"
-                    placeholder="Cari nama vendor, kontak, atau telepon..."
+                    label="Dikerjakan oleh (opsional)"
+                    placeholder="Pilih nama perusahaan / teknisi..."
                     :selected="old('vendor_id') ? (int) old('vendor_id') : null"
                     wire:key="maintenance-vendor-select"
                 />
@@ -35,7 +36,7 @@
                 <section data-bagian="1" class="border-t border-bauhaus-black pt-6">
                     <div class="mb-6 flex items-center gap-3">
                         <span class="inline-flex h-8 items-center bg-bauhaus-blue px-3 font-display text-xs uppercase tracking-widest text-white">Bagian 1</span>
-                        <span class="font-display text-xs uppercase tracking-widest text-slate-500">Laporan Pertama</span>
+                        <span class="font-display text-xs uppercase tracking-widest text-slate-500">Untuk alat pertama</span>
                     </div>
 
                     <div class="grid gap-6 md:grid-cols-2">
@@ -44,7 +45,7 @@
                                 type="asset"
                                 name="asset_id"
                                 label="Alat / Mesin"
-                                placeholder="Cari nama alat, kode alat, atau no. inventaris..."
+                                placeholder="Pilih alat / mesin dari daftar..."
                                 :selected="old('asset_id') ? (int) old('asset_id') : null"
                                 required
                                 :require-room="true"
@@ -98,7 +99,8 @@
                         </div>
 
                         <div class="md:col-span-2 border-t border-bauhaus-black pt-6">
-                            <p class="mb-4 font-display text-sm uppercase tracking-widest">Lampiran Foto Wajib</p>
+                            <p class="mb-1 font-display text-sm uppercase tracking-widest">Lampiran Foto Wajib</p>
+                            <p class="mb-4 text-sm text-slate-500">Siapkan 3 foto berikut untuk alat ini:</p>
                             <div class="grid gap-4 md:grid-cols-3">
                                 @include('laporan.partials.photo-slot', ['field' => 'foto_indoor', 'caption' => 'Pencucian AC Indoor', 'bagian' => 1, 'required' => true])
                                 @include('laporan.partials.photo-slot', ['field' => 'foto_outdoor', 'caption' => 'Pencucian AC Outdoor', 'bagian' => 1, 'required' => true])
@@ -114,12 +116,12 @@
                 <section data-bagian="2" hidden class="border-t border-bauhaus-black pt-6">
                     <div class="mb-6 flex items-center gap-3">
                         <span class="inline-flex h-8 items-center bg-bauhaus-yellow px-3 font-display text-xs uppercase tracking-widest">Bagian 2</span>
-                        <span class="font-display text-xs uppercase tracking-widest text-slate-500">Laporan Kedua</span>
+                        <span class="font-display text-xs uppercase tracking-widest text-slate-500">Untuk alat kedua</span>
                         <button
                             type="button"
                             data-bagian-remove
                             class="bauhaus-btn ml-auto bg-bauhaus-red px-3 py-1.5 text-xs text-white hover:bg-red-700"
-                        >Hapus Bagian</button>
+                        >Hapus Alat Ini</button>
                     </div>
 
                     <div class="grid gap-6 md:grid-cols-2">
@@ -128,7 +130,7 @@
                                 type="asset"
                                 name="asset_id_2"
                                 label="Alat / Mesin"
-                                placeholder="Cari nama alat, kode alat, atau no. inventaris..."
+                                placeholder="Pilih alat / mesin dari daftar..."
                                 :selected="old('asset_id_2') ? (int) old('asset_id_2') : null"
                                 :require-room="true"
                                 :show-condition="true"
@@ -180,7 +182,8 @@
                         </div>
 
                         <div class="md:col-span-2 border-t border-bauhaus-black pt-6">
-                            <p class="mb-4 font-display text-sm uppercase tracking-widest">Lampiran Foto Wajib</p>
+                            <p class="mb-1 font-display text-sm uppercase tracking-widest">Lampiran Foto Wajib</p>
+                            <p class="mb-4 text-sm text-slate-500">Siapkan 3 foto berikut untuk alat ini:</p>
                             <div class="grid gap-4 md:grid-cols-3">
                                 @include('laporan.partials.photo-slot', ['field' => 'foto_indoor_2', 'caption' => 'Pencucian AC Indoor', 'bagian' => 2])
                                 @include('laporan.partials.photo-slot', ['field' => 'foto_outdoor_2', 'caption' => 'Pencucian AC Outdoor', 'bagian' => 2])
@@ -197,7 +200,7 @@
                 <a href="{{ route('welcome') }}" class="bauhaus-btn bg-bauhaus-paper px-5 py-2.5 text-xs">← Kembali</a>
                 <div class="flex flex-wrap items-center gap-3">
                     <button type="button" data-bagian-add class="bauhaus-btn bg-bauhaus-yellow px-5 py-2.5 text-xs">
-                        + Tambah Bagian
+                        + Tambah Alat Lain
                     </button>
                     <button type="submit" class="bauhaus-btn bg-bauhaus-blue px-8 py-3 text-white hover:bg-bauhaus-blue-dark">
                         Kirim Laporan

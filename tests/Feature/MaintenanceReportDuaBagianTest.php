@@ -75,13 +75,16 @@ it('halaman form perawatan menampilkan dua bagian dan filter lokasi', function (
     $this->actingAs($this->teknisi)
         ->get(route('laporan.perawatan'))
         ->assertOk()
-        ->assertSee('Filter Lokasi Aset')
+        ->assertSee('Pilih Lokasi Alat')
+        ->assertSee('1. Pilih Gedung')
+        ->assertSee('2. Pilih Jurusan')
+        ->assertSee('3. Pilih Ruangan')
         ->assertSee('Bagian 1')
         ->assertSee('Bagian 2')
-        ->assertSee('+ Tambah Bagian')
+        ->assertSee('+ Tambah Alat Lain')
         ->assertSee('Kartu Perawatan')
         ->assertSee('Pilih gedung terlebih dahulu')
-        ->assertSee('Lengkapi filter lokasi')
+        ->assertSee('Pilih lokasi alat di atas dulu')
         ->assertSee('Lampiran Tambahan')
         ->assertSee('name="foto_extra"', false);
 });
@@ -175,13 +178,13 @@ it('filter lokasi bercabang membatasi jurusan dan ruangan', function () {
         ->assertSet('buildingId', $this->gedungA->id)
         ->assertSet('departmentId', null)
         ->assertSet('roomId', null)
+        ->assertSet('openDepartment', true)
         ->assertDispatched('lokasi-filter-changed', buildingId: $this->gedungA->id, departmentId: null, roomId: null)
-        ->set('openDepartment', true)
         ->assertSee('Teknik Informatika')
         ->assertDontSee('Akuntansi')
         ->call('selectDepartment', $this->ti->id)
         ->assertSet('departmentId', $this->ti->id)
-        ->set('openRoom', true)
+        ->assertSet('openRoom', true)
         ->assertSee('Ruang A1')
         ->assertDontSee('Ruang B1')
         ->call('selectRoom', $this->ruangA1->id)
@@ -241,7 +244,7 @@ it('alat tidak dapat dicari sebelum ruangan dipilih pada filter lokasi', functio
         'requireRoom' => true,
     ])
         ->set('open', true)
-        ->assertSee('Pilih gedung, jurusan, lalu ruangan pada filter lokasi untuk memilih alat.')
+        ->assertSee('Pilih gedung, lalu jurusan, lalu ruangan di atas dulu ya. Daftar alat akan muncul di sini.')
         ->assertDontSee('AC Split 2 PK - AC-1');
 });
 
@@ -254,12 +257,13 @@ it('alat dapat dipilih setelah gedung, jurusan, dan ruangan lengkap', function (
         'requireRoom' => true,
     ])
         ->dispatch('lokasi-filter-changed', buildingId: $this->gedungA->id, departmentId: $this->ti->id, roomId: $this->ruangA1->id)
-        ->set('search', 'AC')
+        ->assertSet('open', true)
         ->assertSee('AC Split 2 PK - AC-1')
         ->assertSee('AC Split 1,5 PK - AC-2')
         ->assertDontSee('AC Cassette 3 PK - AC-3')
         ->call('selectOption', $this->asset1->id)
-        ->assertSet('selectedId', $this->asset1->id);
+        ->assertSet('selectedId', $this->asset1->id)
+        ->assertSet('open', false);
 });
 
 it('pilihan alat dibersihkan saat ruangan dihapus pada filter lokasi', function () {
@@ -276,7 +280,8 @@ it('pilihan alat dibersihkan saat ruangan dihapus pada filter lokasi', function 
         ->dispatch('lokasi-filter-changed', buildingId: $this->gedungA->id, departmentId: $this->ti->id, roomId: null)
         ->assertSet('selectedId', null)
         ->assertSet('selectedLabel', '')
-        ->assertSet('search', '');
+        ->assertSet('search', '')
+        ->assertSet('open', false);
 });
 
 it('opsi alat menampilkan penanda kondisi (status dan riwayat terakhir)', function () {

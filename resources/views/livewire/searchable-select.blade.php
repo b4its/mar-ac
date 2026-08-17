@@ -33,7 +33,7 @@
         <div class="absolute z-30 mt-2 w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-200/70 dark:border-slate-700 dark:bg-slate-900 dark:shadow-black/30">
             @if ($this->locationLocked)
                 <div class="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">
-                    Pilih gedung, jurusan, lalu ruangan pada filter lokasi untuk memilih alat.
+                    Pilih gedung, lalu jurusan, lalu ruangan di atas dulu ya. Daftar alat akan muncul di sini.
                 </div>
             @elseif (! $creating)
                 <div class="max-h-72 overflow-y-auto py-1">
@@ -218,7 +218,7 @@
     @endif
 
     @if ($this->locationLocked)
-        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Lengkapi filter lokasi (gedung → jurusan → ruangan) terlebih dahulu untuk memilih alat.</p>
+        <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Pilih lokasi alat di atas dulu: gedung → jurusan → ruangan.</p>
     @elseif ($required && ! $selectedId && trim($search) !== '')
         <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Pilih data dari daftar atau tambahkan data baru.</p>
     @endif

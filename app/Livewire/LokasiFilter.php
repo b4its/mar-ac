@@ -64,6 +64,7 @@ class LokasiFilter extends Component
         $this->searchDepartment = '';
         $this->searchRoom = '';
         $this->closeAll();
+        $this->openDepartment = true;
         $this->dispatchFilter();
     }
 
@@ -86,6 +87,7 @@ class LokasiFilter extends Component
         $this->searchDepartment = Department::find($id)?->nama_jurusan ?? '';
         $this->searchRoom = '';
         $this->closeAll();
+        $this->openRoom = true;
         $this->dispatchFilter();
     }
 

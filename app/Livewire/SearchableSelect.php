@@ -206,6 +206,12 @@ class SearchableSelect extends Component
             return;
         }
 
+        // UX: begitu ruangan terpilih, buka daftar alat secara otomatis agar
+        // pengguna tinggal mengetuk alatnya (tanpa perlu klik dropdown lagi).
+        if ($this->requireRoom) {
+            $this->open = (bool) $this->filterRoomId && ! $this->selectedId;
+        }
+
         if ($this->selectedId) {
             $record = $this->modelQuery()->find($this->selectedId);
 
@@ -214,6 +220,7 @@ class SearchableSelect extends Component
                 $this->selectedLabel = '';
                 $this->search = '';
                 $this->syncPartnerExclude(null);
+                $this->open = $this->requireRoom && (bool) $this->filterRoomId;
             }
         }
     }
