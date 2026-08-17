@@ -248,28 +248,39 @@
                 });
             }
 
-            if (addBtn) {
-                addBtn.addEventListener('click', function () {
-                    var next = sections.find(function (section) { return section.hidden; });
-                    if (next) {
-                        next.hidden = false;
+                if (addBtn) {
+                    addBtn.addEventListener('click', function () {
+                        var next = sections.find(function (section) { return section.hidden; });
+                        if (next) {
+                            next.hidden = false;
+                            sync();
+                        }
+                    });
+                }
+
+                // Buka kembali bagian yang sudah terisi (mis. setelah validasi gagal).
+                sections.forEach(function (section) {
+                    if (!section.hidden) {
+                        return;
+                    }
+                    var assetInput = section.querySelector('input[name="asset_id_2"]');
+                    if (assetInput && assetInput.value !== '') {
+                        section.hidden = false;
+                    }
+                });
+
+                container.addEventListener('click', function (event) {
+                    var remove = event.target.closest('[data-bagian-remove]');
+                    if (!remove) {
+                        return;
+                    }
+                    var section = remove.closest('[data-bagian]');
+                    if (section) {
+                        resetSection(section);
+                        section.hidden = true;
                         sync();
                     }
                 });
-            }
-
-            container.addEventListener('click', function (event) {
-                var remove = event.target.closest('[data-bagian-remove]');
-                if (!remove) {
-                    return;
-                }
-                var section = remove.closest('[data-bagian]');
-                if (section) {
-                    resetSection(section);
-                    section.hidden = true;
-                    sync();
-                }
-            });
 
             sync();
         })();
