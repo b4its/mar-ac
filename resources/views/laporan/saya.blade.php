@@ -22,7 +22,7 @@
                         class="rounded border border-bauhaus-black px-3 py-2 text-sm focus:border-bauhaus-blue focus:outline-none focus:ring-1 focus:ring-bauhaus-blue"
                     >
                     
-                    {{-- Building Select (Searchable) --}}
+                    {{-- Building Select --}}
                     <select id="buildingSelect" name="building_id" class="rounded border border-bauhaus-black px-3 py-2 text-sm focus:border-bauhaus-blue focus:outline-none focus:ring-1 focus:ring-bauhaus-blue">
                         <option value="">Semua Gedung</option>
                         @foreach($buildings as $building)
@@ -36,7 +36,7 @@
                     <select id="departmentSelect" name="department_id" class="rounded border border-bauhaus-black px-3 py-2 text-sm focus:border-bauhaus-blue focus:outline-none focus:ring-1 focus:ring-bauhaus-blue">
                         <option value="">Semua Jurusan</option>
                         @foreach($departments as $dept)
-                            <option value="{{ $dept->id }}" data-building="{{ $dept->building_id }}" {{ request('department_id') == $dept->id ? 'selected' : '' }}>
+                            <option value="{{ $dept->id }}" data-building="{{ $dept->building_id ?? '' }}" {{ request('department_id') == $dept->id ? 'selected' : '' }}>
                                 {{ $dept->nama_jurusan }}
                             </option>
                         @endforeach
@@ -46,7 +46,7 @@
                     <select id="roomSelect" name="room_id" class="rounded border border-bauhaus-black px-3 py-2 text-sm focus:border-bauhaus-blue focus:outline-none focus:ring-1 focus:ring-bauhaus-blue">
                         <option value="">Semua Ruangan</option>
                         @foreach($rooms as $room)
-                            <option value="{{ $room->id }}" data-department="{{ $room->department_id }}" {{ request('room_id') == $room->id ? 'selected' : '' }}>
+                            <option value="{{ $room->id }}" data-department="{{ $room->department_id ?? '' }}" {{ request('room_id') == $room->id ? 'selected' : '' }}>
                                 {{ $room->nama_ruangan }}
                             </option>
                         @endforeach
@@ -99,67 +99,21 @@
         </div>
     </div>
 
-    {{-- Custom Searchable Select Styles & Scripts --}}
+    {{-- Styles & Scripts --}}
     <style>
-        .search-select-wrapper {
-            position: relative;
-            display: block;
-        }
-        
-        .search-select-input {
-            width: 100%;
-        }
-        
-        .search-select-dropdown {
-            display: none;
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            border: 1px solid #000;
-            z-index: 1000;
-            max-height: 200px;
-            overflow-y: auto;
-            margin-top: 2px;
-        }
-        
-        .search-select-dropdown.active {
-            display: block;
-        }
-        
-        .search-select-item {
-            padding: 8px 12px;
-            cursor: pointer;
-            border-bottom: 1px solid #eee;
-        }
-        
-        .search-select-item:hover {
-            background: #f0f0f0;
-        }
-        
         .tab-btn {
             background: transparent;
             border: none;
             outline: none;
             transition: all 0.3s ease;
             text-transform: uppercase;
+            cursor: pointer;
         }
         
         .active-tab {
             background: #000;
             color: #fff;
             position: relative;
-        }
-        
-        .active-tab::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: currentColor;
         }
         
         .inactive-tab:hover {
@@ -171,9 +125,9 @@
         let currentTab = '{{ request('tab', 'damage') }}';
         let currentPage = 1;
         
-        // Initialize searchable selects
+        // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
-            initializeSearchableSelects();
+            initializeFilters();
             loadReports(currentTab, 1);
             
             // Form submit handler
@@ -207,11 +161,12 @@
             
             // Update tabs UI
             document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('active-tab');
-                btn.classList.add('inactive-tab');
                 if (btn.dataset.tab === tab) {
                     btn.classList.add('active-tab');
                     btn.classList.remove('inactive-tab');
+                } else {
+                    btn.classList.add('inactive-tab');
+                    btn.classList.remove('active-tab');
                 }
             });
             
@@ -228,6 +183,7 @@
         
         async function loadReports(type, page) {
             const formData = {
+                _token: '{{ csrf_token() }}',
                 type: type,
                 page: page,
                 per_page: document.getElementById('perPageSelect').value,
@@ -242,7 +198,6 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     },
                     body: JSON.stringify(formData)
                 });
@@ -271,7 +226,7 @@
         }
         
         function renderReports(data) {
-            const { data: reports, current_page, last_page, total, from, to } = data;
+            const { data: reports, current_page, last_page, total, from, to, type } = data;
             
             if (!reports || reports.length === 0) {
                 document.getElementById('reportsContainer').innerHTML = `
@@ -284,47 +239,52 @@
             }
             
             const reportTypeLabels = {
-                'damage': { label: 'Laporan Kerusakan', icon: 'triangle', bgColor: 'blue', textColor: 'white', badgeColor: 'bauhaus-yellow' },
-                'maintenance': { label: 'Hasil Perawatan', icon: 'circle-hole', bgColor: 'yellow', textColor: '', badgeColor: 'bauhaus-yellow' },
-                'repair': { label: 'Laporan Hasil Perbaikan', icon: 'square', bgColor: 'blue', textColor: 'white', badgeColor: 'bauhaus-yellow' }
+                'damage': { label: 'Laporan Kerusakan', icon: 'triangle', bgColor: 'blue', textColor: '#fff' },
+                'maintenance': { label: 'Hasil Perawatan', icon: 'circle-hole', bgColor: '#FFD700', textColor: '#000' },
+                'repair': { label: 'Laporan Hasil Perbaikan', icon: 'square', bgColor: 'blue', textColor: '#fff' }
             };
             
-            const config = reportTypeLabels[data.type];
+            const config = reportTypeLabels[type];
+            const badgeConfig = getStatusConfig(data.statuses?.[0]?.status);
             
             let html = `
                 <section class="border border-bauhaus-black bg-bauhaus-paper">
-                    <div class="flex items-center justify-between gap-4 border-b border-bauhaus-black ${config.bgColor === 'blue' ? 'bg-bauhaus-blue p-4 text-white' : 'bg-bauhaus-yellow p-4'}">
-                        <div class="flex items-center gap-4">
+                    <div class="flex items-center justify-between gap-4 border-b border-bauhaus-black" style="background-color: ${config.bgColor}; color: ${config.textColor}; padding: 1rem;">
+                        <div class="flex items-center gap-4" style="display: flex; align-items: center; gap: 1rem;">
                             <x-bauhaus.shape type="${config.icon}" color="yellow" class="h-8 w-8" />
-                            <h2 class="bauhaus-title text-lg">${config.label}</h2>
+                            <h2 class="bauhaus-title text-lg" style="margin: 0;">${config.label}</h2>
                         </div>
-                        <span class="text-xs text-${config.textColor === 'white' ? 'bauhaus-yellow' : 'bauhaus-ink'}">
+                        <span class="text-xs" style="color: ${config.textColor === '#fff' ? '#FFD700' : '#000'};">
                             ${from} - ${to} dari ${total} laporan
                         </span>
                     </div>
-                    <ul class="divide-y divide-bauhaus-black">
+                    <ul class="divide-y divide-bauhaus-black" style="border-collapse: collapse;">
             `;
             
             reports.forEach(report => {
-                const statusConfig = getStatusConfig(report.status);
+                const status = report.status;
+                const isDisetujui = status === 'disetujui';
+                const isDitolak = status === 'ditolak';
+                const isPending = status === 'pending' || !status;
+                const badgeClass = isDisetujui ? 'bg-bauhaus-yellow' : (isDitolak ? 'bg-bauhaus-paper text-red-600' : 'bg-bauhaus-paper');
+                const badgeLabel = isDisetujui ? 'Disetujui' : (isDitolak ? 'Ditolak' : (status === 'revisi' ? 'Revisi' : 'Pending'));
+                
                 html += `
-                    <li class="p-5">
-                        <div class="flex flex-wrap items-center justify-between gap-3">
-                            <div class="min-w-0">
-                                <p class="text-sm font-semibold">${report.nama_alat}</p>
-                                <p class="text-xs font-bold uppercase tracking-widest text-bauhaus-blue">${report.nomor_laporan} · ${report.jenis_kerusakan || report.jenis_pekerjaan}</p>
-                                <p class="mt-1 text-xs text-bauhaus-ink">
-                                    ${report.tanggal_laporan || report.tanggal_pelaksanaan ? moment(report.tanggal_laporan || report.tanggal_pelaksanaan).format('D MMM YYYY') : '-'}
-                                    · ${report.gedung !== '-' ? report.gedung : ''}${report.ruangan && report.ruangan !== '-' ? ', ' + report.ruangan : ''}
+                    <li style="padding: 1.25rem;">
+                        <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem;">
+                            <div style="min-width: 0;">
+                                <p style="margin: 0 0 0.25rem; font-size: 0.875rem; font-weight: 600;">${report.nama_alat}</p>
+                                <p style="margin: 0; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; color: #2196F3;">${report.nomor_laporan} · ${report.jenis_kerusakan || report.jenis_pekerjaan}</p>
+                                <p style="margin: 0.25rem 0 0; font-size: 0.75rem; color: #333;">
+                                    ${report.tanggal_laporan || report.tanggal_pelaksanaan ? new Date(report.tanggal_laporan || report.tanggal_pelaksanaan).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}
+                                    ${report.gedung !== '-' ? (' · ' + report.gedung) : ''}${report.ruangan && report.ruangan !== '-' ? (' · ' + report.ruangan) : ''}${report.jurusan && report.jurusan !== '-' ? (' · ' + report.jurusan) : ''}
                                 </p>
                             </div>
-                            <span class="border border-bauhaus-black px-3 py-1 font-display text-xs uppercase tracking-widest ${statusConfig.className}">
-                                ${statusConfig.label}
-                            </span>
+                            <span style="border: 1px solid #000; padding: 0.25rem 0.75rem; font-family: monospace; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; ${badgeClass === 'bg-bauhaus-yellow' ? 'background-color: #FFD700;' : (badgeClass.includes('text-red-600') ? 'color: #dc2626;' : '')}">${badgeLabel}</span>
                         </div>
-                        <div class="mt-4 flex flex-wrap gap-3">
-                            <a href="/laporan/status?nomor=${report.nomor_laporan}" class="bauhaus-btn bg-bauhaus-paper px-4 py-2 text-xs">Lihat Detail</a>
-                            <a href="/laporan/pdf/${report.type || getTypeFromName(report.nomor_laporan)}/${report.id}" class="bauhaus-btn bg-bauhaus-black px-4 py-2 text-xs text-white">Preview PDF</a>
+                        <div style="margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 0.75rem;">
+                            <a href="/laporan/status?nomor=${report.nomor_laporan}" style="background-color: #fff; padding: 0.5rem 1rem; font-size: 0.75rem; border: 1px solid #000; text-decoration: none; color: #000;" class="bauhaus-btn">Lihat Detail</a>
+                            <a href="/laporan/pdf/${report.type || getTypeFromName(report.nomor_laporan)}/${report.id}" style="background-color: #000; padding: 0.5rem 1rem; font-size: 0.75rem; color: #fff; border: 1px solid #000; text-decoration: none;" class="bauhaus-btn">Preview PDF</a>
                         </div>
                     </li>
                 `;
@@ -333,16 +293,16 @@
             html += `
                     </ul>
                     ${last_page > 1 ? `
-                        <div class="flex items-center justify-between border-t border-bauhaus-black p-4 bg-yellow-50">
-                            <div class="text-xs text-bauhaus-ink">
+                        <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #000; padding: 1rem; background-color: #FFFEF0;">
+                            <div class="text-xs text-bauhaus-ink" style="margin: 0; font-size: 0.875rem;">
                                 Halaman ${current_page} dari ${last_page}
                             </div>
-                            <div class="space-x-2">
-                                ${current_page === 1 ? '<span class="px-3 py-1 text-xs text-gray-400">&laquo; Prev</span>' : `
-                                    <button onclick="loadReports('${data.type}', ${current_page - 1})" class="bauhaus-btn bg-bauhaus-paper px-3 py-1 text-xs">Prev</button>
+                            <div style="display: flex; gap: 0.5rem;">
+                                ${current_page === 1 ? '<span style="padding: 0.25rem 0.75rem; font-size: 0.75rem; color: #ccc;">&laquo; Prev</span>' : `
+                                    <button onclick="loadReports('${data.type}', ${current_page - 1})" style="padding: 0.25rem 0.75rem; font-size: 0.75rem; border: 1px solid #000; background: #fff; cursor: pointer;" class="bauhaus-btn">Prev</button>
                                 `}
-                                ${current_page === last_page ? '<span class="px-3 py-1 text-xs text-gray-400">Next &raquo;</span>' : `
-                                    <button onclick="loadReports('${data.type}', ${current_page + 1})" class="bauhaus-btn bg-bauhaus-paper px-3 py-1 text-xs">Next</button>
+                                ${current_page === last_page ? '<span style="padding: 0.25rem 0.75rem; font-size: 0.75rem; color: #ccc;">Next &raquo;</span>' : `
+                                    <button onclick="loadReports('${data.type}', ${current_page + 1})" style="padding: 0.25rem 0.75rem; font-size: 0.75rem; border: 1px solid #000; background: #fff; cursor: pointer;" class="bauhaus-btn">Next</button>
                                 `}
                             </div>
                         </div>
@@ -370,8 +330,7 @@
             return 'kerusakan';
         }
         
-        function initializeSearchableSelects() {
-            // Simple select functionality with location-based filtering
+        function initializeFilters() {
             const buildingSelect = document.getElementById('buildingSelect');
             const departmentSelect = document.getElementById('departmentSelect');
             const roomSelect = document.getElementById('roomSelect');
@@ -402,7 +361,4 @@
             });
         }
     </script>
-    
-    {{-- Moment.js for date formatting --}}
-    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
 </x-bauhaus.layout>
