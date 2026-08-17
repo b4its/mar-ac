@@ -310,7 +310,7 @@ class DatabaseSeeder extends Seeder
     }
 
     /**
-     * 100 laporan kerusakan dengan tingkat dan status yang beragam.
+     * 150 laporan kerusakan dengan tingkat dan status yang beragam untuk demo lengkap.
      *
      * @param  array<string, Asset>  $assets
      * @return array<int, DamageReport>
@@ -322,6 +322,7 @@ class DatabaseSeeder extends Seeder
         $jenisPool = [
             'AC tidak dingin', 'Kompresor mati', 'Bunyi berisik pada outdoor',
             'Air menetes dari indoor', 'Remote tidak berfungsi', 'Kebocoran freon',
+            'Filter tersumbat', 'Fan motor tidak jalan', 'Freon bocor', 'Kabel terbakar',
         ];
         $uraianPool = [
             'Suhu ruangan tidak turun meskipun AC sudah dinyalakan lama.',
@@ -330,20 +331,28 @@ class DatabaseSeeder extends Seeder
             'Terdapat tetesan air dari unit indoor saat AC beroperasi.',
             'Remote tidak merespons, indikator pada unit tetap menyala.',
             'Tekanan freon menurun drastis dalam beberapa hari terakhir.',
+            'Debu menumpuk di evaporator sehingga aliran udara tersumbat.',
+            'Motor blower tidak berputar meski daya terpasang baik.',
+            'Terlihat bekas kebocoran freon di sambungan pipa.',
+            'Terminal kontrol hangus akibat korsleting.',
         ];
 
         $year = now()->format('Y');
         $rows = [];
 
-        for ($i = 1; $i <= self::TARGET; $i++) {
-            $status = match ($i % 4) {
-                1 => DamageReportStatus::Ditolak,
+        for ($i = 1; $i <= self::TARGET + 50; $i++) {
+            $status = match ($i % 5) {
+                1 => DamageReportStatus::Dilaporkan,
                 2 => DamageReportStatus::Disetujui,
                 3 => DamageReportStatus::Selesai,
+                4 => DamageReportStatus::Ditolak,
                 default => DamageReportStatus::Dilaporkan,
             };
 
-            $isApproved = $status !== DamageReportStatus::Dilaporkan;
+            $isApproved = in_array($status, [DamageReportStatus::Disetujui, DamageReportStatus::Selesai]);
+            $isRejected = $status === DamageReportStatus::Ditolak;
+
+            $daysAgo = ($i * 7) % 365;
 
             $rows[] = [
                 'nomor_laporan' => sprintf('%03d/UPA.PP/KSR/%s', $i, $year),
@@ -352,11 +361,12 @@ class DatabaseSeeder extends Seeder
                 'tingkat_kerusakan' => $tingkat[($i - 1) % count($tingkat)],
                 'jenis_kerusakan' => $jenisPool[($i - 1) % count($jenisPool)],
                 'uraian_kerusakan' => $uraianPool[($i - 1) % count($uraianPool)],
-                'tanggal_laporan' => now()->subDays($i),
+                'tanggal_laporan' => now()->subDays($daysAgo),
                 'status' => $status->value,
-                'approved_at' => $isApproved ? now()->subDays(max(0, $i - 1)) : null,
-                'approved_by_user_id' => $isApproved ? $admin->id : null,
-                'catatan' => $isApproved ? 'Sudah ditindaklanjuti oleh tim teknis.' : null,
+                'approved_at' => ($isApproved || $isRejected) ? now()->subDays(max(1, $daysAgo - 1)) : null,
+                'approved_by_user_id' => ($isApproved || $isRejected) ? $admin->id : null,
+                'catatan' => $isApproved ? 'Setelah pemeriksaan ditemukan kerusakan komponen utama.' : 
+                            ($isRejected ? 'Tidak memenuhi kriteria perbaikan – masih dalam masa garansi.' : null),
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
@@ -368,7 +378,7 @@ class DatabaseSeeder extends Seeder
     }
 
     /**
-     * 100 laporan perbaikan, masing-masing merujuk satu laporan kerusakan.
+     * 150 laporan perbaikan mengikuti alur: kerusakan → disetujui → perbaikan.
      *
      * @param  array<string, Asset>  $assets
      * @param  array<int, Vendor>  $vendors
@@ -379,26 +389,41 @@ class DatabaseSeeder extends Seeder
         $jenisPool = [
             'Penggantian kompresor AC', 'Perbaikan fan blower outdoor',
             'Perbaikan kebocoran freon', 'Penggantian PCB kontrol',
+            'Pembersihan evaporator menyeluruh', 'Penggantian motor blower',
+            'Kalibrasi sensor suhu', 'Pengecekan tekanan freon & pengisian',
+            'Tukar unit indoor-outdoor', 'Reparasi sistem kipas',
         ];
         $uraianPool = [
             'Komponen diganti dengan unit baru, lalu diuji selama 2 jam.',
             'Baut dikencangkan dan bearing motor diberi pelumas.',
             'Sambungan pipa diganti dan freon diisi ulang sesuai tekanan standar.',
             'Modul kontrol diganti dan sistem dikalibrasi ulang.',
+            'Evaporator dibersihkan total dari kerak debu yang menumpuk.',
+            'Motor blower lama diganti dengan tipe upgraded lebih senyap.',
+            'Sensor dikalibrasi untuk akurasi suhu ±0.5°C.',
+            'Freon R410A diisi ulang hingga mencapai tekanan nominal.',
+            'Unit indoor dan outdoor ditukar posisinya untuk efisiensi.',
+            'Sistem kipas diperbaiki termasuk更换belt drive.',
         ];
 
         $year = now()->format('Y');
         $rows = [];
 
-        for ($i = 1; $i <= self::TARGET; $i++) {
-            $damage = $damages[$i - 1];
-            $status = match ($i % 3) {
-                1 => RepairStatus::Disetujui,
-                2 => RepairStatus::Revisi,
+        for ($i = 1; $i <= self::TARGET + 50; $i++) {
+            // Repair report linked to damage report
+            $damage = $damages[($i - 1) % count($damages)];
+            
+            $status = match ($i % 4) {
+                1 => RepairStatus::Diajukan,
+                2 => RepairStatus::Disetujui,
+                3 => RepairStatus::Revisi,
                 default => RepairStatus::Diajukan,
             };
 
             $selesai = $status === RepairStatus::Disetujui;
+            
+            // Spread dates over last ~6 months (180 days)
+            $daysBack = (($i - 1) * 3) % 180 + 1;
 
             $rows[] = [
                 'nomor_laporan' => sprintf('%03d/UPA.PP/PRB/%s', $i, $year),
@@ -409,14 +434,15 @@ class DatabaseSeeder extends Seeder
                 'teknisi_user_id' => $teknisi->id,
                 'jenis_pekerjaan' => $jenisPool[($i - 1) % count($jenisPool)],
                 'uraian_pekerjaan' => $uraianPool[($i - 1) % count($uraianPool)],
-                'tanggal_pelaksanaan' => now()->subDays($i + 1),
-                'tanggal_selesai' => $selesai ? now()->subDays(max(0, $i - 1)) : null,
-                'biaya' => 200000 + (($i * 37) % 20) * 50000,
-                'biaya_jasa' => 100000 + (($i * 53) % 10) * 25000,
+                'tanggal_pelaksanaan' => now()->subDays($daysBack),
+                'tanggal_selesai' => $selesai ? now()->subDays(max(0, $daysBack - 2)) : null,
+                'biaya' => 150000 + (($i * 41) % 30) * 75000,
+                'biaya_jasa' => 100000 + (($i * 53) % 15) * 50000,
                 'status' => $status->value,
                 'verifikator_user_id' => $selesai ? $admin->id : null,
-                'verified_at' => $selesai ? now()->subDays(max(0, $i - 1)) : null,
-                'catatan' => $selesai ? 'Selesai dikerjakan sesuai jadwal kerja sama vendor.' : null,
+                'verified_at' => $selesai ? now()->subDays(max(0, $daysBack - 2)) : null,
+                'catatan' => $selesai ? 'Pekerjaan selesai sesuai spesifikasi vendor.' : 
+                           ($status === RepairStatus::Revisi ? 'Perlu penyesuaian komponen tambahan.' : null),
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
@@ -426,9 +452,9 @@ class DatabaseSeeder extends Seeder
     }
 
     /**
-     * 100 laporan perawatan. Setiap laporan memiliki satu bagian kedua (item)
-     * dan satu lampiran demo, kecuali laporan khusus nomor 3 yang memuat enam
-     * lampiran dua bagian seperti data demo sebelumnya.
+     * 150 laporan perawatan dengan status dan variasi yang beragam untuk demo lengkap.
+     * Setiap laporan memiliki bagian kedua (item) jika nomor genap.
+     * Laporan #3 tetap memiliki lampiran khusus untuk testing PDF dua bagian.
      *
      * @param  array<string, Asset>  $assets
      * @param  array<int, Vendor>  $vendors
@@ -439,63 +465,103 @@ class DatabaseSeeder extends Seeder
         $jenisPool = [
             'Pencucian AC Indoor & Outdoor', 'Cek tekanan freon & kebersihan filter',
             'Penggantian filter udara', 'Pembersihan evaporator & kondensor',
+            'Lumasan motor blower indoor', 'Pengecekan aliran freon',
+            'Kalibrasi termostat digital', 'Pembersihan saluran drainase',
+            'Pemeriksaan komponen elektrik', 'Tune-up sistem pendingin total',
         ];
         $uraianPool = [
             'Pembersihan filter, evaporator, kondensor, dan pengecekan tekanan freon.',
             'Pengecekan tekanan freon, pembersihan filter, dan pengetesan suhu output.',
-            'Filter udara diganti dengan unit baru sesuai jadwal perawatan.',
-            'Evaporator dan kondensor dibersihkan dari debu yang menumpuk.',
+            'Filter udara diganti dengan unit baru sesuai jadwal perawatan berkala.',
+            'Evaporator dan kondensor dibersihkan dari debu yang menumpuk di sela-sela fin.',
+            'Motor blower indoor dilumasi agar putaran lebih halus dan senyap.',
+            'Aliran freon diperiksa menggunakan manometer untuk memastikan tidak ada kebocoran.',
+            'Termostat digital dikalibrasi ulang akurasinya hingga mencapai ±0.3°C.',
+            'Saluran drainase disumbat kalsium dibersihkan menggunakan acid wash aman.',
+            'Komponen elektrik (kapasitor, kontaktor) diperiksa ketahanan isolasinya.',
+            'Sistem pendingin ditune-up lengkap mulai dari pompa vakum hingga pengisian freon.',
         ];
 
         $year = now()->format('Y');
 
-        for ($i = 1; $i <= self::TARGET; $i++) {
-            $status = match ($i % 3) {
-                1 => ReportStatus::Diverifikasi,
-                2 => ReportStatus::Disetujui,
+        // Bulk insert for maintenance reports
+        $rows = [];
+        
+        for ($i = 1; $i <= self::TARGET + 50; $i++) {
+            $status = match ($i % 4) {
+                1 => ReportStatus::Diajukan,
+                2 => ReportStatus::Diverifikasi,
+                3 => ReportStatus::Disetujui,
                 default => ReportStatus::Diajukan,
             };
-
-            $asset = $assetList[($i - 1) % count($assetList)];
-
-            $report = MaintenanceReport::create([
+            
+            $hasVerified = in_array($status, [ReportStatus::Diverifikasi, ReportStatus::Disetujui]);
+            $isApproved = $status === ReportStatus::Disetujui;
+            
+            $daysBack = (($i - 1) * 4) % 365 + 1;
+            
+            $rows[] = [
                 'nomor_laporan' => sprintf('%03d/UPA.PP/PRW/%s', $i, $year),
-                'asset_id' => $asset->id,
+                'asset_id' => $assetList[($i - 1) % count($assetList)]->id,
                 'pelapor_user_id' => $teknisi->id,
                 'vendor_id' => $vendors[($i - 1) % count($vendors)]->id,
                 'jenis_pekerjaan' => $jenisPool[($i - 1) % count($jenisPool)],
                 'uraian_pekerjaan' => $uraianPool[($i - 1) % count($uraianPool)],
-                'tanggal_pelaksanaan' => now()->subDays(($i * 2) % 300 + 1),
-                'biaya' => 150000 + (($i * 41) % 10) * 25000,
-                'biaya_jasa' => 100000 + (($i * 29) % 8) * 25000,
+                'tanggal_pelaksanaan' => now()->subDays($daysBack),
+                'biaya' => 150000 + (($i * 47) % 15) * 30000,
+                'biaya_jasa' => 100000 + (($i * 61) % 12) * 40000,
                 'status' => $status->value,
-                'verified_at' => $status !== ReportStatus::Diajukan ? now()->subDays(($i * 2) % 300) : null,
-                'approved_at' => $status === ReportStatus::Disetujui ? now()->subDays(max(0, ($i * 2) % 300 - 1)) : null,
-                'catatan' => $status === ReportStatus::Disetujui ? 'Disetujui oleh atasan.' : null,
-            ]);
+                'verified_at' => $hasVerified ? now()->subDays(max(1, $daysBack - 3)) : null,
+                'approved_at' => $isApproved ? now()->subDays(max(1, $daysBack - 2)) : null,
+                'catatan' => $isApproved ? 'Laporan disetujui untuk pembayaran.' : 
+                           ($status === ReportStatus::Diverifikasi ? 'Sedang menunggu persetujuan akhir manajemen.' : null),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+        }
+        
+        MaintenanceReport::insert($rows);
+        
+        // Get reports again after bulk insert
+        $reports = MaintenanceReport::query()->orderBy('id')->get();
+        
+        // Create items for section 2 (one per report)
+        foreach ($reports as $report) {
+            // Section 2 asset (next one in list)
+            $itemAssetIndex = $report->id % count($assetList);
 
-            // Bagian kedua (item) agar tabel maintenance_report_items penuh.
             $report->items()->create([
                 'bagian' => 2,
-                'asset_id' => $assetList[$i % count($assetList)]->id,
-                'jenis_pekerjaan' => $jenisPool[$i % count($jenisPool)],
-                'uraian_pekerjaan' => 'Pekerjaan lanjutan pada unit kedua di lokasi yang sama.',
-                'tanggal_pelaksanaan' => now()->subDays(($i * 2) % 300 + 1),
-                'biaya' => 100000 + (($i * 17) % 8) * 25000,
-                'biaya_jasa' => 75000 + (($i * 13) % 6) * 25000,
+                'asset_id' => $assetList[$itemAssetIndex]->id,
+                'jenis_pekerjaan' => $jenisPool[($report->id - 1) % count($jenisPool)],
+                'uraian_pekerjaan' => 'Perawatan lanjutan pada unit kedua dalam batch yang sama.',
+                'tanggal_pelaksanaan' => $report->tanggal_pelaksanaan,
+                'biaya' => 100000 + (($report->id * 37) % 10) * 25000,
+                'biaya_jasa' => 75000 + (($report->id * 29) % 8) * 25000,
                 'sort_order' => 0,
             ]);
-
-            if ($i === 3) {
+        }
+        
+        // Attachments: special handling for report #3 (6 attachments), regular ones get 1-2
+        foreach ($reports as $report) {
+            if ($report->id === 3) {
+                // Special 2-section report with all slots
                 $this->attachDemoImages($report, [
                     ['caption' => 'Pencucian AC Indoor', 'color' => [60, 130, 90]],
                     ['caption' => 'Pencucian AC Outdoor', 'color' => [130, 90, 60]],
                     ['caption' => 'Kartu Perawatan', 'color' => [90, 60, 130]],
-                    ['caption' => 'Pencucian AC Indoor', 'slot_key' => 'indoor_cleaning_2', 'color' => [60, 100, 160]],
-                    ['caption' => 'Pencucian AC Outdoor', 'slot_key' => 'outdoor_cleaning_2', 'color' => [160, 120, 60]],
-                    ['caption' => 'Kartu Perawatan', 'slot_key' => 'maintenance_card_2', 'color' => [100, 90, 160]],
+                    ['caption' => 'Pencucian AC Indoor (Bagian 2)', 'slot_key' => 'indoor_cleaning_2', 'color' => [60, 100, 160]],
+                    ['caption' => 'Pencucian AC Outdoor (Bagian 2)', 'slot_key' => 'outdoor_cleaning_2', 'color' => [160, 120, 60]],
+                    ['caption' => 'Kartu Perawatan (Bagian 2)', 'slot_key' => 'maintenance_card_2', 'color' => [100, 90, 160]],
                 ], $teknisi);
-            } elseif ($i >= 4 && $i <= 97) {
+            } elseif (($report->id - 3) % 2 === 0 && $report->id > 3) {
+                // Every other report gets 2 attachments (section 1)
+                $this->attachDemoImages($report, [
+                    ['caption' => 'Pencucian AC Indoor', 'color' => [$report->id % 200, 100, 160]],
+                    ['caption' => 'Pencucian AC Outdoor', 'color' => [60, $report->id % 120, 60]],
+                ], $teknisi);
+            } else {
+                // Regular reports get 1 attachment
                 $this->attachDemoImages($report, [
                     ['caption' => 'Pencucian AC Indoor', 'color' => [60, 100, 160]],
                 ], $teknisi);
@@ -504,7 +570,7 @@ class DatabaseSeeder extends Seeder
     }
 
     /**
-     * 100 jadwal pemeliharaan dengan status terjadwal, selesai, dan dibatalkan.
+     * 150 jadwal pemeliharaan dengan status terjadwal, selesai, dan dibatalkan.
      *
      * @param  array<string, Asset>  $assets
      */
@@ -517,7 +583,7 @@ class DatabaseSeeder extends Seeder
         ];
 
         $rows = [];
-        for ($i = 1; $i <= self::TARGET; $i++) {
+        for ($i = 1; $i <= self::TARGET + 50; $i++) {
             $status = match ($i % 3) {
                 1 => JadwalStatus::Selesai,
                 2 => JadwalStatus::Dibatalkan,
