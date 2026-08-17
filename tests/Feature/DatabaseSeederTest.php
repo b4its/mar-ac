@@ -23,7 +23,9 @@ it('seeder menghasilkan data lokasi, aset, dan vendor yang beragam', function ()
         ->and(Vendor::count())->toBeGreaterThanOrEqual(4)
         ->and(Asset::query()->distinct()->count('merk'))->toBeGreaterThanOrEqual(5)
         ->and(Asset::query()->whereNull('room_id')->count())->toBe(1)
-        ->and(Asset::query()->distinct()->count('status'))->toBeGreaterThanOrEqual(3);
+        ->and(Asset::query()->distinct()->count('status'))->toBeGreaterThanOrEqual(3)
+        ->and(Asset::query()->whereNotNull('last_maintenance_date')->count())->toBeGreaterThanOrEqual(10)
+        ->and(Asset::query()->whereNotNull('last_maintenance_date')->distinct()->count('last_maintenance_date'))->toBeGreaterThanOrEqual(8);
 });
 
 it('seeder menghasilkan laporan kerusakan, perbaikan, perawatan, dan jadwal dengan status berbeda', function () {

@@ -120,23 +120,23 @@ class DatabaseSeeder extends Seeder
 
         $assets = [];
         foreach ([
-            ['AC-001', 'AC Split 2 PK', 'Daikin', '2 PK', '2022', 'baik', 'INV-2022-0001', $r['A-1'], $j['AK']],
-            ['AC-002', 'AC Split 1,5 PK', 'Panasonic', '1,5 PK', '2021', 'baik', 'INV-2021-0002', $r['A-2'], $j['TI']],
-            ['AC-003', 'AC Cassette 3 PK', 'Gree', '3 PK', '2023', 'baik', 'INV-2023-0003', $r['A-3'], $j['AK']],
-            ['AC-004', 'AC Split 1 PK', 'Sharp', '1 PK', '2019', 'rusak_ringan', 'INV-2019-0004', $r['A-4'], $j['AK']],
-            ['AC-005', 'AC Standing 5 PK', 'LG', '5 PK', '2020', 'rusak_sedang', 'INV-2020-0005', $r['A-3'], $j['AK']],
-            ['AC-006', 'AC Split 2 PK', 'Daikin', '2 PK', '2023', 'baik', 'INV-2023-0006', $r['B-1'], $j['TI']],
-            ['AC-007', 'AC Split 1 PK', 'Samsung', '1 PK', '2022', 'baik', 'INV-2022-0007', $r['B-2'], $j['TI']],
-            ['AC-008', 'AC Window 1,5 PK', 'Mitsubishi', '1,5 PK', '2018', 'rusak_berat', 'INV-2018-0008', $r['B-3'], $j['TE']],
-            ['AC-009', 'AC Split 2 PK', 'Carrier', '2 PK', '2021', 'rusak_ringan', 'INV-2021-0009', $r['B-4'], $j['TAS']],
-            ['AC-010', 'AC Cassette 3 PK', 'Gree', '3 PK', '2024', 'baik', 'INV-2024-0010', $r['B-3'], $j['TE']],
-            ['AC-011', 'AC Split 1,5 PK', 'Panasonic', '1,5 PK', '2022', 'baik', 'INV-2022-0011', $r['C-1'], $j['AK']],
-            ['AC-012', 'AC Split 1 PK', 'Sharp', '1 PK', '2020', 'baik', 'INV-2020-0012', $r['C-2'], $j['TAS']],
-            ['AC-013', 'AC Standing 3 PK', 'LG', '3 PK', '2019', 'rusak_ringan', 'INV-2019-0013', $r['C-3'], $j['TAS']],
-            ['AC-014', 'AC Duct 4 PK', 'Daikin', '4 PK', '2024', 'baik', 'INV-2024-0014', $r['C-4'], $j['TM']],
-            ['AC-015', 'AC Split 2 PK', 'Samsung', '2 PK', '2021', 'rusak_sedang', 'INV-2021-0015', $r['C-1'], $j['AK']],
-            ['AC-016', 'AC Portable 1 PK', 'Midea', '1 PK', '2024', 'baik', 'INV-2024-0016', null, $j['TM']],
-        ] as [$kode, $nama, $merk, $kapasitas, $tahun, $status, $inventaris, $ruangan, $jurusan]) {
+            ['AC-001', 'AC Split 2 PK', 'Daikin', '2 PK', '2022', 'baik', 'INV-2022-0001', $r['A-1'], $j['AK'], now()->subDays(30)],
+            ['AC-002', 'AC Split 1,5 PK', 'Panasonic', '1,5 PK', '2021', 'baik', 'INV-2021-0002', $r['A-2'], $j['TI'], now()->subDays(6)],
+            ['AC-003', 'AC Cassette 3 PK', 'Gree', '3 PK', '2023', 'baik', 'INV-2023-0003', $r['A-3'], $j['AK'], now()->subDays(55)],
+            ['AC-004', 'AC Split 1 PK', 'Sharp', '1 PK', '2019', 'rusak_ringan', 'INV-2019-0004', $r['A-4'], $j['AK'], null],
+            ['AC-005', 'AC Standing 5 PK', 'LG', '5 PK', '2020', 'rusak_sedang', 'INV-2020-0005', $r['A-3'], $j['AK'], now()->subDays(120)],
+            ['AC-006', 'AC Split 2 PK', 'Daikin', '2 PK', '2023', 'baik', 'INV-2023-0006', $r['B-1'], $j['TI'], now()->subDays(20)],
+            ['AC-007', 'AC Split 1 PK', 'Samsung', '1 PK', '2022', 'baik', 'INV-2022-0007', $r['B-2'], $j['TI'], now()->subDays(20)],
+            ['AC-008', 'AC Window 1,5 PK', 'Mitsubishi', '1,5 PK', '2018', 'rusak_berat', 'INV-2018-0008', $r['B-3'], $j['TE'], null],
+            ['AC-009', 'AC Split 2 PK', 'Carrier', '2 PK', '2021', 'rusak_ringan', 'INV-2021-0009', $r['B-4'], $j['TAS'], now()->subDays(95)],
+            ['AC-010', 'AC Cassette 3 PK', 'Gree', '3 PK', '2024', 'baik', 'INV-2024-0010', $r['B-3'], $j['TE'], now()->subDays(12)],
+            ['AC-011', 'AC Split 1,5 PK', 'Panasonic', '1,5 PK', '2022', 'baik', 'INV-2022-0011', $r['C-1'], $j['AK'], now()->subDays(40)],
+            ['AC-012', 'AC Split 1 PK', 'Sharp', '1 PK', '2020', 'baik', 'INV-2020-0012', $r['C-2'], $j['TAS'], now()->subDays(70)],
+            ['AC-013', 'AC Standing 3 PK', 'LG', '3 PK', '2019', 'rusak_ringan', 'INV-2019-0013', $r['C-3'], $j['TAS'], now()->subDays(150)],
+            ['AC-014', 'AC Duct 4 PK', 'Daikin', '4 PK', '2024', 'baik', 'INV-2024-0014', $r['C-4'], $j['TM'], now()->subDays(10)],
+            ['AC-015', 'AC Split 2 PK', 'Samsung', '2 PK', '2021', 'rusak_sedang', 'INV-2021-0015', $r['C-1'], $j['AK'], now()->subDays(200)],
+            ['AC-016', 'AC Portable 1 PK', 'Midea', '1 PK', '2024', 'baik', 'INV-2024-0016', null, $j['TM'], null],
+        ] as [$kode, $nama, $merk, $kapasitas, $tahun, $status, $inventaris, $ruangan, $jurusan, $perawatanTerakhir]) {
             $assets[$kode] = Asset::create([
                 'nama_alat' => $nama,
                 'jenis_alat' => 'Pendingin Ruangan',
@@ -148,6 +148,7 @@ class DatabaseSeeder extends Seeder
                 'merk' => $merk,
                 'tahun_pemakaian' => $tahun,
                 'status' => $status,
+                'last_maintenance_date' => $perawatanTerakhir?->toDateString(),
             ]);
         }
 
