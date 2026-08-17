@@ -31,7 +31,7 @@
                     <input
                         id="email"
                         type="email"
-                        name="email"
+                        name="email" autocomplete="email"
                         value="{{ old('email') }}"
                         required
                         autofocus
@@ -47,7 +47,7 @@
                         <input
                             id="password"
                             :type="show ? 'text' : 'password'"
-                            name="password"
+                            name="password" autocomplete="current-password"
                             required
                             autocomplete="current-password"
                             placeholder="••••••••"

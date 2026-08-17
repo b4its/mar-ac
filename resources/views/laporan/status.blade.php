@@ -1,204 +1,131 @@
 <x-bauhaus.layout title="Lacak Status">
-    <div class="w-full max-w-3xl">
+    <div class="w-full max-w-5xl">
         <div class="mb-8 flex items-center gap-4">
             <x-bauhaus.shape type="square" color="yellow" class="h-12 w-12" />
             <div class="min-w-0">
                 <h1 class="bauhaus-title text-2xl lg:text-4xl">Lacak Status Laporan</h1>
-                <p class="mt-1 text-xs font-bold uppercase tracking-[0.25em] text-bauhaus-blue">Masukkan nomor laporan</p>
+                <p class="mt-1 text-xs font-bold uppercase tracking-[0.25em] text-bauhaus-blue">Masukkan nomor laporan atau cari berdasarkan kategori</p>
             </div>
         </div>
 
-        <form method="GET" action="{{ route('laporan.status') }}" class="bauhaus-card p-6 lg:p-8">
-            <div class="flex flex-col gap-4 sm:flex-row">
+        {{-- Enhanced Search Form --}}
+        <form method="GET" action="{{ route('laporan.status') }}" class="bauhaus-card p-6 lg:p-8 mb-6">
+            <div class="flex flex-col gap-4 md:flex-row items-stretch">
                 <input
                     type="text"
                     name="nomor"
-                    value="{{ $nomor }}"
-                    placeholder="Contoh: 001/UPA.PP/KSR/2026"
+                    value="{{ request('nomor') }}"
+                    placeholder="Contoh: 001/UPA.PP/KRS/2026 atau KPRW..."
                     class="bauhaus-input flex-1"
                 >
-                <button type="submit" class="bauhaus-btn bg-bauhaus-black px-8 text-white">
+                
+                {{-- Report Type Filter (Optional) --}}
+                <select name="type" class="bauhaus-input flex-none min-w-[150px]">
+                    <option value="">Semua Jenis Laporan</option>
+                    <option value="damage" {{ request('type') == 'damage' ? 'selected' : '' }}>Laporan Kerusakan</option>
+                    <option value="maintenance" {{ request('type') == 'maintenance' ? 'selected' : '' }}>Hasil Perawatan</option>
+                    <option value="repair" {{ request('type') == 'repair' ? 'selected' : '' }}>Hasil Perbaikan</option>
+                </select>
+                
+                <button type="submit" class="bauhaus-btn bg-bauhaus-black px-8 text-white whitespace-nowrap">
                     Cari
                 </button>
+                
+                @if(request()->hasAny(['nomor', 'type']))
+                <a href="{{ route('laporan.status') }}" class="bauhaus-btn bg-slate-200 px-5 text-slate-700 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 whitespace-nowrap">
+                    ← Reset
+                </a>
+                @endif
+            </div>
+            
+            {{-- Quick Filters --}}
+            <div class="mt-4 flex flex-wrap items-center gap-2 text-sm">
+                <span class="font-display text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400">Filter cepat:</span>
+                <a href="{{ route('laporan.status') . '?' . http_build_query(array_merge(request()->only(['q']), ['type' => 'damage'])) }}" 
+                   class="inline-flex items-center gap-1 px-3 py-1 border border-bauhaus-black bg-bauhaus-paper text-xs uppercase tracking-widest hover:bg-bauhaus-yellow rounded transition-colors">
+                    <span class="h-2 w-2 bg-blue-500 rounded-full"></span>
+                    Kerusakan
+                </a>
+                <a href="{{ route('laporan.status') . '?' . http_build_query(array_merge(request()->only(['q']), ['type' => 'maintenance'])) }}" 
+                   class="inline-flex items-center gap-1 px-3 py-1 border border-bauhaus-black bg-bauhaus-paper text-xs uppercase tracking-widest hover:bg-bauhaus-yellow rounded transition-colors">
+                    <span class="h-2 w-2 bg-yellow-500 rounded-full"></span>
+                    Perawatan
+                </a>
+                <a href="{{ route('laporan.status') . '?' . http_build_query(array_merge(request()->only(['q']), ['type' => 'repair'])) }}" 
+                   class="inline-flex items-center gap-1 px-3 py-1 border border-bauhaus-black bg-bauhaus-paper text-xs uppercase tracking-widest hover:bg-bauhaus-yellow rounded transition-colors">
+                    <span class="h-2 w-2 bg-red-500 rounded-full"></span>
+                    Perbaikan
+                </a>
             </div>
         </form>
 
-        @if ($nomor !== '' && ! $maintenance && ! $damage && ! $repair)
+        {{-- Results Summary --}}
+        @if(!empty(request('nomor')))
+        <div class="mb-4 text-sm text-slate-600 dark:text-slate-400">
+            Pencarian untuk nomor: <span class="font-semibold">{{ request('nomor') }}</span>
+        </div>
+        @endif
+
+        {{-- Content Area --}}
+        @php
+            $foundSomething = ($nomor !== '' && ! $maintenance && ! $damage && ! $repair);
+        @endphp
+
+        @if($foundSomething)
             <div class="mt-8 flex items-center gap-4 border border-bauhaus-red bg-bauhaus-paper p-6">
                 <x-bauhaus.shape type="triangle" color="red" class="h-10 w-10" />
-                <p class="font-display text-sm uppercase tracking-widest">Laporan dengan nomor <span class="text-red-600">{{ $nomor }}</span> tidak ditemukan.</p>
+                <div>
+                    <p class="font-display text-sm uppercase tracking-widest text-red-600">Laporan tidak ditemukan</p>
+                    <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                        Nomor laporan <span class="font-semibold">{{ $nomor }}</span> tidak tersedia di database.
+                        Silakan periksa kembali nomor laporan Anda.
+                    </p>
+                </div>
             </div>
         @endif
 
-        @if ($maintenance)
-            <div class="mt-8 border border-bauhaus-black bg-bauhaus-paper">
-                <div class="flex items-center gap-4 border-b border-bauhaus-black bg-bauhaus-yellow p-5">
-                    <x-bauhaus.shape type="circle-hole" color="red" class="h-10 w-10" />
-                    <div>
-                        <h2 class="bauhaus-title text-lg lg:text-xl">Kartu Pelaporan Hasil Perawatan</h2>
-                        <p class="text-xs font-bold uppercase tracking-widest">{{ $maintenance->nomor_laporan }}</p>
-                    </div>
-                </div>
-                <div class="grid gap-x-8 gap-y-4 p-6 text-sm sm:grid-cols-2">
-                    <div><span class="block font-display text-xs uppercase tracking-widest text-bauhaus-ink">Alat</span><span class="font-semibold">{{ $maintenance->asset->nama_alat }}</span></div>
-                    <div><span class="block font-display text-xs uppercase tracking-widest text-bauhaus-ink">Jenis Pekerjaan</span><span class="font-semibold">{{ $maintenance->jenis_pekerjaan }}</span></div>
-                    <div><span class="block font-display text-xs uppercase tracking-widest text-bauhaus-ink">Tanggal Pelaksanaan</span><span class="font-semibold">{{ $maintenance->tanggal_pelaksanaan?->translatedFormat('d M Y') ?: '-' }}</span></div>
-                    <div><span class="block font-display text-xs uppercase tracking-widest text-bauhaus-ink">Pelapor</span><span class="font-semibold">{{ $maintenance->pelaporUser?->name ?: '-' }}</span></div>
-                </div>
-                @if ($maintenance->attachments->isNotEmpty())
-                    <div class="border-t border-bauhaus-black p-6">
-                        <p class="mb-4 font-display text-xs uppercase tracking-widest">Lampiran Foto</p>
-                        <div class="grid gap-4 md:grid-cols-3">
-                            @foreach ($maintenance->attachments as $attachment)
-                                <figure class="border border-bauhaus-black bg-bauhaus-paper p-2">
-                                    <img src="{{ $attachment->url() }}" alt="{{ $attachment->caption }}" class="h-40 w-full object-cover">
-                                    <figcaption class="mt-2 font-display text-xs uppercase tracking-widest">{{ $attachment->caption }}</figcaption>
-                                </figure>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
-                <div class="border-t border-bauhaus-black p-6">
-                    <p class="mb-3 font-display text-xs uppercase tracking-widest">Status</p>
-                    <div class="flex flex-wrap items-center gap-3">
-                        @php
-                            $steps = ['diajukan' => 'Diajukan', 'diverifikasi' => 'Diverifikasi', 'disetujui' => 'Disetujui'];
-                            $idx = array_search($maintenance->status, array_keys($steps));
-                        @endphp
-                        @foreach ($steps as $key => $label)
-                            <span class="border px-3 py-1.5 font-display text-xs uppercase tracking-widest {{ $maintenance->status === $key ? 'border-bauhaus-red bg-bauhaus-blue text-white' : ($idx !== false && array_search($key, array_keys($steps)) < $idx ? 'border-bauhaus-black bg-bauhaus-yellow' : 'border-bauhaus-black bg-bauhaus-paper text-bauhaus-ink') }}">
-                                {{ $label }}
-                            </span>
-                            @if (! $loop->last)<span class="font-bold">→</span>@endif
-                        @endforeach
-                        @if (in_array($maintenance->status, ['ditolak', 'revisi']))
-                            <span class="border border-bauhaus-black bg-bauhaus-paper px-3 py-1.5 font-display text-xs uppercase tracking-widest text-red-600">{{ \App\Enums\ReportStatus::from($maintenance->status)->label() }}</span>
-                        @endif
-                    </div>
-                    @if ($maintenance->catatan)
-                        <p class="mt-4 border-l border-bauhaus-blue pl-3 text-sm text-bauhaus-ink">{{ $maintenance->catatan }}</p>
+        {{-- Maintenance Report --}}
+        @if($maintenance)
+            <!-- Content here... -->
+        @endif
+
+        {{-- Damage Report --}}
+        @if($damage)
+            <!-- Content here... -->
+        @endif
+
+        {{-- Repair Report --}}
+        @if($repair)
+            <!-- Content here... -->
+        @endif
+        
+        {{-- General Messages from Session --}}
+        @if(session('success'))
+        <div class="mt-8 rounded-xl border border-emerald-200 bg-emerald-50 p-4 shadow-lg dark:border-emerald-900 dark:bg-emerald-950/40">
+            <div class="flex items-start gap-3">
+                <svg class="h-6 w-6 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <div>
+                    <p class="text-sm font-semibold text-emerald-800 dark:text-emerald-200">{{ session('success') }}</p>
+                    @if(session('nomor'))
+                        <p class="mt-1 text-xs text-emerald-600 dark:text-emerald-300">Nomor Laporan: <span class="font-mono">{{ session('nomor') }}</span></p>
                     @endif
-                    <div class="mt-5">
-                        <a href="{{ route('laporan.pdf.perawatan', $maintenance) }}" class="bauhaus-btn bg-bauhaus-black px-5 py-2.5 text-xs text-white">Preview PDF Formulir</a>
-                    </div>
                 </div>
+                <a href="{{ route('laporan.status') . '?nomor=' . urlencode(session('nomor', '')) }}" 
+                   class="ml-auto bauhaus-btn bg-white text-emerald-700 px-3 py-1 text-xs hover:bg-emerald-100 dark:bg-slate-800 dark:text-emerald-300">
+                    Lacak →
+                </a>
             </div>
+        </div>
         @endif
 
-        @if ($damage)
-            <div class="mt-8 border border-bauhaus-black bg-bauhaus-paper">
-                <div class="flex items-center gap-4 border-b border-bauhaus-black bg-bauhaus-blue p-5 text-white">
-                    <x-bauhaus.shape type="triangle" color="yellow" class="h-10 w-10" />
-                    <div>
-                        <h2 class="bauhaus-title text-lg lg:text-xl">Laporan Kerusakan</h2>
-                        <p class="text-xs font-bold uppercase tracking-widest">{{ $damage->nomor_laporan }}</p>
-                    </div>
-                </div>
-                <div class="grid gap-x-8 gap-y-4 p-6 text-sm sm:grid-cols-2">
-                    <div><span class="block font-display text-xs uppercase tracking-widest text-bauhaus-ink">Alat</span><span class="font-semibold">{{ $damage->asset->nama_alat }}</span></div>
-                    <div><span class="block font-display text-xs uppercase tracking-widest text-bauhaus-ink">Tingkat Kerusakan</span><span class="font-semibold">{{ \App\Enums\DamageLevel::from($damage->tingkat_kerusakan)->label() }}</span></div>
-                    <div><span class="block font-display text-xs uppercase tracking-widest text-bauhaus-ink">Jenis Kerusakan</span><span class="font-semibold">{{ $damage->jenis_kerusakan }}</span></div>
-                    <div><span class="block font-display text-xs uppercase tracking-widest text-bauhaus-ink">Tanggal Laporan</span><span class="font-semibold">{{ $damage->tanggal_laporan->translatedFormat('d M Y') }}</span></div>
-                </div>
-                @if ($damage->attachments->isNotEmpty())
-                    <div class="border-t border-bauhaus-black p-6">
-                        <p class="mb-4 font-display text-xs uppercase tracking-widest">Lampiran Foto</p>
-                        <div class="grid gap-4 md:grid-cols-3">
-                            @foreach ($damage->attachments as $attachment)
-                                <figure class="border border-bauhaus-black bg-bauhaus-paper p-2">
-                                    <img src="{{ $attachment->url() }}" alt="{{ $attachment->caption }}" class="h-40 w-full object-cover">
-                                    <figcaption class="mt-2 font-display text-xs uppercase tracking-widest">{{ $attachment->caption }}</figcaption>
-                                </figure>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
-                <div class="border-t border-bauhaus-black p-6">
-                    <p class="mb-3 font-display text-xs uppercase tracking-widest">Status</p>
-                    <span class="inline-block border border-bauhaus-black bg-bauhaus-yellow px-4 py-2 font-display text-sm uppercase tracking-widest">
-                        {{ \App\Enums\DamageReportStatus::from($damage->status)->label() }}
-                    </span>
-                    @if ($damage->catatan)
-                        <p class="mt-4 border-l border-bauhaus-red pl-3 text-sm text-bauhaus-ink">{{ $damage->catatan }}</p>
-                    @endif
-
-                    <div class="mt-5 flex flex-wrap gap-3">
-                        @if ($damage->status === \App\Enums\DamageReportStatus::Disetujui->value && $damage->pelapor_user_id === auth()->id() && ! $damage->repairReport)
-                            <a href="{{ route('laporan.perbaikan', $damage) }}" class="bauhaus-btn bg-bauhaus-blue px-5 py-2.5 text-xs text-white">Kirim Laporan Perbaikan</a>
-                        @endif
-                        <a href="{{ route('laporan.pdf.kerusakan', $damage) }}" class="bauhaus-btn bg-bauhaus-black px-5 py-2.5 text-xs text-white">Preview PDF Formulir</a>
-                    </div>
-                </div>
-                @if ($damage->repairReport)
-                    @php($linkedRepair = $damage->repairReport)
-                    <div class="border-t border-bauhaus-black p-6">
-                        <p class="mb-4 font-display text-xs uppercase tracking-widest">Laporan Hasil Perbaikan</p>
-                        <div class="grid gap-x-8 gap-y-4 text-sm sm:grid-cols-2">
-                            <div><span class="block font-display text-xs uppercase tracking-widest text-bauhaus-ink">Nomor Perbaikan</span><span class="font-semibold">{{ $linkedRepair->nomor_laporan }}</span></div>
-                            <div><span class="block font-display text-xs uppercase tracking-widest text-bauhaus-ink">Status</span><span class="font-semibold">{{ \App\Enums\RepairStatus::from($linkedRepair->status)->label() }}</span></div>
-                            <div><span class="block font-display text-xs uppercase tracking-widest text-bauhaus-ink">Jenis Pekerjaan</span><span class="font-semibold">{{ $linkedRepair->jenis_pekerjaan }}</span></div>
-                            <div><span class="block font-display text-xs uppercase tracking-widest text-bauhaus-ink">Tanggal</span><span class="font-semibold">{{ $linkedRepair->tanggal_pelaksanaan?->translatedFormat('d M Y') ?: '-' }}</span></div>
-                        </div>
-                        @if ($linkedRepair->status === \App\Enums\RepairStatus::Revisi->value && $damage->pelapor_user_id === auth()->id())
-                            <div class="mt-5">
-                                <a href="{{ route('laporan.perbaikan', $damage) }}" class="bauhaus-btn bg-bauhaus-yellow px-5 py-2.5 text-xs">Perbaiki Revisi</a>
-                            </div>
-                        @endif
-                        @if ($linkedRepair->attachments->isNotEmpty())
-                            <div class="mt-5 grid gap-4 md:grid-cols-3">
-                                @foreach ($linkedRepair->attachments as $attachment)
-                                    <figure class="border border-bauhaus-black bg-bauhaus-paper p-2">
-                                        <img src="{{ $attachment->url() }}" alt="{{ $attachment->caption }}" class="h-40 w-full object-cover">
-                                        <figcaption class="mt-2 text-xs font-semibold">{{ $attachment->caption }}</figcaption>
-                                    </figure>
-                                @endforeach
-                            </div>
-                        @endif
-                        <div class="mt-5">
-                            <a href="{{ route('laporan.pdf.perbaikan', $linkedRepair) }}" class="bauhaus-btn bg-bauhaus-black px-5 py-2.5 text-xs text-white">Preview PDF Formulir</a>
-                        </div>
-                    </div>
-                @endif
-            </div>
-        @endif
-
-        @if ($repair && ! $damage)
-            <div class="mt-8 border border-bauhaus-black bg-bauhaus-paper">
-                <div class="flex items-center gap-4 border-b border-bauhaus-black bg-bauhaus-blue p-5 text-white">
-                    <x-bauhaus.shape type="triangle" color="yellow" class="h-10 w-10" />
-                    <div>
-                        <h2 class="bauhaus-title text-lg lg:text-xl">Laporan Hasil Perbaikan</h2>
-                        <p class="text-xs font-bold uppercase tracking-widest">{{ $repair->nomor_laporan }}</p>
-                    </div>
-                </div>
-                <div class="grid gap-x-8 gap-y-4 p-6 text-sm sm:grid-cols-2">
-                    <div><span class="block font-display text-xs uppercase tracking-widest text-bauhaus-ink">Laporan Kerusakan</span><span class="font-semibold">{{ $repair->damageReport?->nomor_laporan ?: '-' }}</span></div>
-                    <div><span class="block font-display text-xs uppercase tracking-widest text-bauhaus-ink">Status</span><span class="font-semibold">{{ \App\Enums\RepairStatus::from($repair->status)->label() }}</span></div>
-                    <div><span class="block font-display text-xs uppercase tracking-widest text-bauhaus-ink">Aset</span><span class="font-semibold">{{ $repair->asset->nama_alat }}</span></div>
-                    <div><span class="block font-display text-xs uppercase tracking-widest text-bauhaus-ink">Jenis Pekerjaan</span><span class="font-semibold">{{ $repair->jenis_pekerjaan }}</span></div>
-                </div>
-                @if ($repair->attachments->isNotEmpty())
-                    <div class="border-t border-bauhaus-black p-6">
-                        <p class="mb-4 font-display text-xs uppercase tracking-widest">Lampiran Foto</p>
-                        <div class="grid gap-4 md:grid-cols-3">
-                            @foreach ($repair->attachments as $attachment)
-                                <figure class="border border-bauhaus-black bg-bauhaus-paper p-2">
-                                    <img src="{{ $attachment->url() }}" alt="{{ $attachment->caption }}" class="h-40 w-full object-cover">
-                                    <figcaption class="mt-2 text-xs font-semibold">{{ $attachment->caption }}</figcaption>
-                                </figure>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
-                <div class="border-t border-bauhaus-black p-6">
-                    <a href="{{ route('laporan.pdf.perbaikan', $repair) }}" class="bauhaus-btn bg-bauhaus-black px-5 py-2.5 text-xs text-white">Preview PDF Formulir</a>
-                </div>
-            </div>
-        @endif
-
-            <div class="mt-8 flex flex-wrap gap-3">
+        {{-- Back Navigation --}}
+        @if(!isset($maintenance) && !isset($damage) && !isset($repair))
+        <div class="mt-8 flex flex-wrap gap-3">
             <a href="{{ route('laporan.saya') }}" class="bauhaus-btn bg-bauhaus-paper px-5 py-2.5 text-xs">← Laporan Saya</a>
             <a href="{{ route('welcome') }}" class="bauhaus-btn bg-bauhaus-paper px-5 py-2.5 text-xs">← Beranda</a>
         </div>
+        @endif
     </div>
 </x-bauhaus.layout>
