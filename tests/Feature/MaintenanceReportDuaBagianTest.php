@@ -4,6 +4,7 @@ use App\Livewire\LokasiFilter;
 use App\Livewire\SearchableSelect;
 use App\Models\Asset;
 use App\Models\Building;
+use App\Models\DamageReport;
 use App\Models\Department;
 use App\Models\MaintenanceReport;
 use App\Models\Room;
@@ -274,6 +275,120 @@ it('pilihan alat dibersihkan saat ruangan dihapus pada filter lokasi', function 
         ->assertSet('selectedId', null)
         ->assertSet('selectedLabel', '')
         ->assertSet('search', '');
+});
+
+it('opsi alat menampilkan penanda kondisi (status dan riwayat terakhir)', function () {
+    $this->asset1->update(['last_maintenance_date' => now()->subDays(10)]);
+    DamageReport::create([
+        'nomor_laporan' => '001/UPA.PP/KSR/2026',
+        'asset_id' => $this->asset1->id,
+        'pelapor_user_id' => $this->teknisi->id,
+        'tingkat_kerusakan' => 'sedang',
+        'jenis_kerusakan' => 'Kompresor mati',
+        'uraian_kerusakan' => 'AC tidak dingin.',
+        'tanggal_laporan' => now()->subDays(2),
+        'status' => 'disetujui',
+    ]);
+
+    $this->actingAs($this->teknisi);
+
+    Livewire::test(SearchableSelect::class, [
+        'type' => 'asset',
+        'name' => 'asset_id',
+        'requireRoom' => true,
+        'showCondition' => true,
+    ])
+        ->dispatch('lokasi-filter-changed', buildingId: $this->gedungA->id, departmentId: $this->ti->id, roomId: $this->ruangA1->id)
+        ->set('search', 'AC Split 2 PK')
+        ->assertSee('Status: Baik')
+        ->assertSee('Perawatan: '.now()->subDays(10)->format('d-m-Y'))
+        ->assertSee('Kerusakan: '.now()->subDays(2)->format('d-m-Y'));
+});
+
+it('panel kondisi alat menampilkan status, perawatan, dan kerusakan terakhir saat dipilih', function () {
+    $this->asset1->update(['last_maintenance_date' => now()->subDays(10)]);
+    DamageReport::create([
+        'nomor_laporan' => '001/UPA.PP/KSR/2026',
+        'asset_id' => $this->asset1->id,
+        'pelapor_user_id' => $this->teknisi->id,
+        'tingkat_kerusakan' => 'sedang',
+        'jenis_kerusakan' => 'Kompresor mati',
+        'uraian_kerusakan' => 'AC tidak dingin.',
+        'tanggal_laporan' => now()->subDays(2),
+        'status' => 'disetujui',
+    ]);
+
+    $this->actingAs($this->teknisi);
+
+    Livewire::test(SearchableSelect::class, [
+        'type' => 'asset',
+        'name' => 'asset_id',
+        'requireRoom' => true,
+        'showCondition' => true,
+    ])
+        ->dispatch('lokasi-filter-changed', buildingId: $this->gedungA->id, departmentId: $this->ti->id, roomId: $this->ruangA1->id)
+        ->call('selectOption', $this->asset1->id)
+        ->assertSee('kondisi alat saat ini')
+        ->assertSee('Baik')
+        ->assertSee('Kapasitas:')
+        ->assertSee('Perawatan terakhir:')
+        ->assertSee(now()->subDays(10)->format('d-m-Y'))
+        ->assertSee('Kerusakan terakhir:')
+        ->assertSee('Kompresor mati')
+        ->assertSee('Disetujui');
+});
+
+it('panel kondisi tidak muncul saat penanda kondisi dimatikan', function () {
+    $this->actingAs($this->teknisi);
+
+    Livewire::test(SearchableSelect::class, [
+        'type' => 'asset',
+        'name' => 'asset_id',
+    ])
+        ->call('selectOption', $this->asset1->id)
+        ->assertDontSee('kondisi alat saat ini')
+        ->assertDontSee('Perawatan terakhir:');
+});
+
+it('menyimpan laporan perawatan memperbarui tanggal perawatan terakhir aset', function () {
+    $this->actingAs($this->teknisi);
+
+    $this->post(route('laporan.perawatan.store'), [
+        'asset_id' => $this->asset1->id,
+        'jenis_pekerjaan' => 'Cleaning AC 1',
+        'tanggal_pelaksanaan' => now()->subDays(3)->toDateString(),
+        'biaya' => '100000',
+        'foto_indoor' => makeTestImage('i1'),
+        'foto_outdoor' => makeTestImage('o1'),
+        'foto_kartu' => makeTestImage('k1'),
+        'asset_id_2' => $this->asset2->id,
+        'jenis_pekerjaan_2' => 'Cleaning AC 2',
+        'tanggal_pelaksanaan_2' => now()->toDateString(),
+        'biaya_2' => '150000',
+        'foto_indoor_2' => makeTestImage('i2'),
+        'foto_outdoor_2' => makeTestImage('o2'),
+        'foto_kartu_2' => makeTestImage('k2'),
+    ])->assertRedirect();
+
+    expect($this->asset1->fresh()->last_maintenance_date->toDateString())->toBe(now()->subDays(3)->toDateString())
+        ->and($this->asset2->fresh()->last_maintenance_date->toDateString())->toBe(now()->toDateString());
+});
+
+it('tanggal perawatan terakhir aset tidak mundur ke tanggal yang lebih lama', function () {
+    $this->asset1->update(['last_maintenance_date' => now()->subDays(2)]);
+    $this->actingAs($this->teknisi);
+
+    $this->post(route('laporan.perawatan.store'), [
+        'asset_id' => $this->asset1->id,
+        'jenis_pekerjaan' => 'Cleaning AC 1',
+        'tanggal_pelaksanaan' => now()->subDays(10)->toDateString(),
+        'biaya' => '100000',
+        'foto_indoor' => makeTestImage('i1'),
+        'foto_outdoor' => makeTestImage('o1'),
+        'foto_kartu' => makeTestImage('k1'),
+    ])->assertRedirect();
+
+    expect($this->asset1->fresh()->last_maintenance_date->toDateString())->toBe(now()->subDays(2)->toDateString());
 });
 
 it('searchable select aset terfilter oleh event lokasi', function () {

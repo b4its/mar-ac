@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Enums\AssetCondition;
+use App\Enums\DamageReportStatus;
 use App\Models\Asset;
 use App\Models\Department;
 use App\Models\Room;
@@ -52,6 +53,12 @@ class SearchableSelect extends Component
      */
     public bool $requireRoom = false;
 
+    /**
+     * Saat true, pemilih alat menampilkan penanda kondisi terkini aset:
+     * status, tanggal perawatan terakhir, dan laporan kerusakan terakhir.
+     */
+    public bool $showCondition = false;
+
     public string $newName = '';
 
     public string $newCode = '';
@@ -92,6 +99,7 @@ class SearchableSelect extends Component
         string $placeholder = 'Cari data...',
         bool $required = false,
         bool $requireRoom = false,
+        bool $showCondition = false,
     ): void {
         $this->type = $type;
         $this->name = $name;
@@ -100,6 +108,7 @@ class SearchableSelect extends Component
         $this->placeholder = $placeholder;
         $this->required = $required;
         $this->requireRoom = $requireRoom;
+        $this->showCondition = $showCondition;
 
         if ($selected) {
             $record = $this->modelQuery()->find($selected);
@@ -263,6 +272,7 @@ class SearchableSelect extends Component
                 'id' => $record->id,
                 'label' => $this->formatLabel($record),
                 'description' => $this->formatDescription($record),
+                'condition' => $record instanceof Asset ? $this->conditionMeta($record) : null,
             ]);
     }
 
@@ -275,6 +285,44 @@ class SearchableSelect extends Component
         }
 
         return $this->options->contains(fn (array $option): bool => mb_strtolower($option['label']) === $needle);
+    }
+
+    /**
+     * Ringkasan kondisi terkini aset yang sedang dipilih: status, spesifikasi,
+     * tanggal perawatan terakhir, dan laporan kerusakan terakhir.
+     */
+    public function getSelectedConditionProperty(): ?array
+    {
+        if (! $this->showCondition || $this->type !== 'asset' || ! $this->selectedId) {
+            return null;
+        }
+
+        $asset = $this->modelQuery()->find($this->selectedId);
+
+        if (! $asset) {
+            return null;
+        }
+
+        $status = AssetCondition::from($asset->status);
+        $damage = $asset->damageReports->first();
+
+        return [
+            'statusLabel' => $status->label(),
+            'statusDot' => $this->statusDotClass($status->color()),
+            'statusText' => $this->statusTextClass($status->color()),
+            'kapasitas' => $asset->kapasitas,
+            'merk' => $asset->merk,
+            'tahunPemakaian' => $asset->tahun_pemakaian,
+            'noInventaris' => $asset->no_inventaris,
+            'lastMaintenance' => $asset->last_maintenance_date?->format('d-m-Y'),
+            'lastDamage' => $damage !== null && $damage->tanggal_laporan !== null ? [
+                'tanggal' => $damage->tanggal_laporan->format('d-m-Y'),
+                'jenis' => $damage->jenis_kerusakan,
+                'statusLabel' => DamageReportStatus::from($damage->status)->label(),
+                'statusDot' => $this->statusDotClass(DamageReportStatus::from($damage->status)->color()),
+                'statusText' => $this->statusTextClass(DamageReportStatus::from($damage->status)->color()),
+            ] : null,
+        ];
     }
 
     public function getLocationLockedProperty(): bool
@@ -323,7 +371,13 @@ class SearchableSelect extends Component
             return Vendor::query()->orderBy('nama_vendor');
         }
 
-        return Asset::query()->with(['room.building', 'department'])->orderBy('nama_alat');
+        return Asset::query()
+            ->with([
+                'room.building',
+                'department',
+                'damageReports' => fn ($query) => $query->orderByDesc('tanggal_laporan')->limit(1),
+            ])
+            ->orderBy('nama_alat');
     }
 
     /**
@@ -375,6 +429,52 @@ class SearchableSelect extends Component
             $record->room?->nama_ruangan,
             $record->department?->nama_jurusan,
         ])->filter()->implode(' - ');
+    }
+
+    private function conditionMeta(Asset $asset): ?array
+    {
+        if (! $this->showCondition) {
+            return null;
+        }
+
+        $status = AssetCondition::from($asset->status);
+        $damage = $asset->damageReports->first();
+
+        $riwayat = collect()
+            ->push($asset->last_maintenance_date ? 'Perawatan: '.$asset->last_maintenance_date->format('d-m-Y') : null)
+            ->push($damage?->tanggal_laporan ? 'Kerusakan: '.$damage->tanggal_laporan->format('d-m-Y') : null)
+            ->filter()
+            ->implode(' · ');
+
+        return [
+            'label' => 'Status: '.$status->label(),
+            'riwayat' => $riwayat,
+            'textClass' => $this->statusTextClass($status->color()),
+        ];
+    }
+
+    private function statusTextClass(string $color): string
+    {
+        return match ($color) {
+            'green' => 'text-emerald-600 dark:text-emerald-400',
+            'yellow' => 'text-yellow-600 dark:text-yellow-400',
+            'orange' => 'text-orange-600 dark:text-orange-400',
+            'red' => 'text-red-600 dark:text-red-400',
+            'gray' => 'text-slate-500 dark:text-slate-400',
+            default => 'text-blue-600 dark:text-blue-400',
+        };
+    }
+
+    private function statusDotClass(string $color): string
+    {
+        return match ($color) {
+            'green' => 'bg-emerald-500',
+            'yellow' => 'bg-yellow-400',
+            'orange' => 'bg-orange-500',
+            'red' => 'bg-red-500',
+            'gray' => 'bg-slate-400',
+            default => 'bg-blue-500',
+        };
     }
 
     private function resetCreateFields(): void

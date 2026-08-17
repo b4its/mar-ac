@@ -48,6 +48,7 @@
                                 :selected="old('asset_id') ? (int) old('asset_id') : null"
                                 required
                                 :require-room="true"
+                                :show-condition="true"
                                 wire:key="maintenance-asset-select"
                             />
                             @error('asset_id')<p class="mt-1 text-sm font-semibold text-red-600">{{ $message }}</p>@enderror
@@ -127,6 +128,7 @@
                                 placeholder="Cari nama alat, kode alat, atau no. inventaris..."
                                 :selected="old('asset_id_2') ? (int) old('asset_id_2') : null"
                                 :require-room="true"
+                                :show-condition="true"
                                 wire:key="maintenance-asset-select-2"
                             />
                             @error('asset_id_2')<p class="mt-1 text-sm font-semibold text-red-600">{{ $message }}</p>@enderror

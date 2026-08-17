@@ -44,6 +44,12 @@
                             class="block w-full px-4 py-3 text-left transition hover:bg-blue-50 dark:hover:bg-slate-800"
                         >
                             <span class="block text-sm font-semibold text-slate-900 dark:text-slate-100">{{ $option['label'] }}</span>
+                            @if ($option['condition'])
+                                <span class="mt-0.5 block text-xs font-semibold {{ $option['condition']['textClass'] }}">{{ $option['condition']['label'] }}</span>
+                                @if ($option['condition']['riwayat'])
+                                    <span class="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">{{ $option['condition']['riwayat'] }}</span>
+                                @endif
+                            @endif
                             @if ($option['description'])
                                 <span class="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">{{ $option['description'] }}</span>
                             @endif
@@ -178,6 +184,35 @@
                         </button>
                     </div>
                 </div>
+            @endif
+        </div>
+    @endif
+
+    @if ($this->selectedCondition)
+        <div class="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900">
+            <div class="flex items-center gap-2">
+                <span class="inline-block h-2.5 w-2.5 rounded-full {{ $this->selectedCondition['statusDot'] }}"></span>
+                <span class="font-display text-xs font-bold uppercase tracking-widest {{ $this->selectedCondition['statusText'] }}">{{ $this->selectedCondition['statusLabel'] }}</span>
+                <span class="text-xs text-slate-500 dark:text-slate-400">— kondisi alat saat ini</span>
+            </div>
+            <dl class="mt-3 grid gap-1 text-xs text-slate-700 sm:grid-cols-2 dark:text-slate-300">
+                <div>Kapasitas: <b>{{ $this->selectedCondition['kapasitas'] ?: '-' }}</b></div>
+                <div>Merk: <b>{{ $this->selectedCondition['merk'] ?: '-' }}</b></div>
+                <div>Tahun Pemakaian: <b>{{ $this->selectedCondition['tahunPemakaian'] ?: '-' }}</b></div>
+                <div>No. Inventaris: <b>{{ $this->selectedCondition['noInventaris'] ?: '-' }}</b></div>
+                <div class="sm:col-span-2">Perawatan terakhir: <b>{{ $this->selectedCondition['lastMaintenance'] ?: 'Belum pernah' }}</b></div>
+            </dl>
+            @if ($this->selectedCondition['lastDamage'])
+                <p class="mt-2 border-t border-slate-200 pt-2 text-xs text-slate-700 dark:border-slate-700 dark:text-slate-300">
+                    Kerusakan terakhir:
+                    <b>{{ $this->selectedCondition['lastDamage']['tanggal'] }} — {{ $this->selectedCondition['lastDamage']['jenis'] }}</b>
+                    <span class="inline-flex items-center gap-1 {{ $this->selectedCondition['lastDamage']['statusText'] }}">
+                        <span class="inline-block h-1.5 w-1.5 rounded-full {{ $this->selectedCondition['lastDamage']['statusDot'] }}"></span>
+                        {{ $this->selectedCondition['lastDamage']['statusLabel'] }}
+                    </span>
+                </p>
+            @else
+                <p class="mt-2 border-t border-slate-200 pt-2 text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400">Tidak ada laporan kerusakan.</p>
             @endif
         </div>
     @endif

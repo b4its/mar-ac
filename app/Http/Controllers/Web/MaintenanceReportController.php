@@ -10,6 +10,7 @@ use App\Services\PublicReportMedia;
 use App\Services\ReportNumberService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
@@ -122,6 +123,8 @@ class MaintenanceReportController extends Controller
                     ));
                 }
 
+                $this->updateLastMaintenanceDate($data);
+
                 return $report;
             });
         } catch (\Throwable $exception) {
@@ -182,6 +185,37 @@ class MaintenanceReportController extends Controller
         }
 
         return $storedPaths;
+    }
+
+    /**
+     * Mencatat tanggal perawatan terakhir pada aset yang dilaporkan.
+     * Hanya maju ke tanggal yang lebih baru, tidak pernah mundur.
+     */
+    private function updateLastMaintenanceDate(array $data): void
+    {
+        $sections = [
+            ['asset_id' => $data['asset_id'], 'tanggal' => $data['tanggal_pelaksanaan'] ?? now()->toDateString()],
+            ['asset_id' => $data['asset_id_2'] ?? null, 'tanggal' => $data['tanggal_pelaksanaan_2'] ?? $data['tanggal_pelaksanaan'] ?? now()->toDateString()],
+        ];
+
+        foreach ($sections as $section) {
+            if (empty($section['asset_id'])) {
+                continue;
+            }
+
+            $asset = Asset::find($section['asset_id']);
+
+            if (! $asset) {
+                continue;
+            }
+
+            $tanggal = Carbon::parse($section['tanggal'])->startOfDay();
+            $terakhir = $asset->last_maintenance_date;
+
+            if ($terakhir === null || $terakhir->lt($tanggal)) {
+                $asset->update(['last_maintenance_date' => $tanggal->toDateString()]);
+            }
+        }
     }
 
     private function filledPrintFields(array $fields): ?array
