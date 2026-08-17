@@ -12,17 +12,63 @@
             @csrf
             <x-bauhaus.shape type="square" color="yellow" class="absolute -right-6 -top-6 h-12 w-12" />
 
+            {{-- Lokasi Filter Section --}}
+            <div class="mb-8">
+                <div class="border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 p-6 shadow-lg">
+                    <h2 class="text-lg font-semibold mb-4 text-slate-900 dark:text-white flex items-center gap-2">
+                        <svg class="h-5 w-5 text-bauhaus-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        Pilih Lokasi Alat
+                    </h2>
+                    
+                    @livewire('lokasi-filter')
+                    
+                    <script>
+                        // Listen for location filter updates and update the asset dropdown
+                        document.addEventListener('location-filter-updated', function(event) {
+                            console.log('Location filter updated:', event.detail);
+                            
+                            // Trigger search in asset dropdown
+                            const searchInput = document.querySelector('input[name="asset_id"]');
+                            if (searchInput) {
+                                // Dispatch Livewire event to refresh options
+                                window.dispatchEvent(new CustomEvent('location-changed', {
+                                    detail: event.detail
+                                }));
+                            }
+                        });
+                    </script>
+                </div>
+            </div>
+
             {{-- Bagian 1 --}}
             <div class="space-y-6">
                 <h2 class="text-lg font-semibold text-slate-900 dark:text-white border-b border-slate-200 pb-2 dark:border-slate-700">Bagian 1</h2>
 
                 <div class="grid gap-6 md:grid-cols-2">
                     <div class="md:col-span-2">
-                        <livewire:searchable-select type="asset" name="asset_id" label="Alat / Mesin" placeholder="Cari nama alat..." :selected="old('asset_id') ? (int) old('asset_id') : null" required wire:key="maintenance-asset-select-section1" />
+                        <livewire:searchable-select 
+                            type="asset" 
+                            name="asset_id" 
+                            label="Alat / Mesin" 
+                            placeholder="Cari nama alat..." 
+                            :selected="old('asset_id') ? (int) old('asset_id') : null" 
+                            required 
+                            wire:key="maintenance-asset-select-section1"
+                        />
                         @error('asset_id')<p class="mt-1 text-sm font-semibold text-red-600">{{ $message }}</p>@enderror
                     </div>
                     <div class="md:col-span-2">
-                        <livewire:searchable-select type="vendor" name="vendor_id" label="Vendor / Pelaksana (opsional)" placeholder="Cari nama vendor..." :selected="old('vendor_id') ? (int) old('vendor_id') : null" wire:key="maintenance-vendor-select-section1" />
+                        <livewire:searchable-select 
+                            type="vendor" 
+                            name="vendor_id" 
+                            label="Vendor / Pelaksana (opsional)" 
+                            placeholder="Cari nama vendor..." 
+                            :selected="old('vendor_id') ? (int) old('vendor_id') : null" 
+                            wire:key="maintenance-vendor-select-section1"
+                        />
                     </div>
                     <div class="md:col-span-2">
                         <label for="jenis_pekerjaan_1" class="mb-2 block font-display text-sm uppercase tracking-widest">Jenis Pekerjaan</label>
@@ -70,7 +116,6 @@
                                        onchange="handlePhotoUpload(this, '{{ $section['key'] }},{{ $section['preview_class'] }},{{ $section['img_id'] }},remove_{{ $section['key'] }}}')" 
                                        data-photo-input>
                                 
-                                <!-- Clickable Upload Area with better pointer events -->
                                 <div id="{{ $section['preview_class'] }}" 
                                      class="upload-placeholder clickable-area border-2 border-dashed border-slate-200 rounded-lg p-6 text-center min-h-[150px] flex flex-col items-center justify-center transition-all cursor-pointer hover:border-bauhaus-blue hover:bg-blue-50 dark:hover:bg-blue-900/20"
                                      onclick="triggerFileClick('{{ $section['id'] }}')">
@@ -80,10 +125,8 @@
                                     <p class="mt-2 text-sm font-medium text-slate-500 dark:text-slate-400 group-hover:text-bauhaus-blue transition-colors">Klik untuk upload foto</p>
                                 </div>
                                 
-                                <!-- Image Preview -->
                                 <img id="{{ $section['img_id'] }}" src="" alt="" class="hidden mx-auto h-40 object-cover rounded-lg border border-slate-200 dark:border-slate-700 shadow-md" />
                                 
-                                <!-- Caption Input -->
                                 <input type="text" 
                                        name="{{ $section['caption'] }}" 
                                        placeholder="Caption (misal: {{ $section['placeholder'] }})" 
@@ -91,7 +134,6 @@
                                        onblur="updateImageAlt(this, '{{ $section['img_id'] }}')"
                                        data-caption-input>
                                 
-                                <!-- Remove Button -->
                                 <button type="button" 
                                         id="remove_{{ $section['key'] }}" 
                                         onclick="removePhoto('{{ $section['key'] }}', '{{ $section['preview_class'] }}')" 
@@ -121,6 +163,9 @@
                     <div class="md:col-span-2">
                         <livewire:searchable-select type="asset" name="asset_id_2" label="Alat / Mesin" placeholder="Cari nama alat..." :selected="old('asset_id_2') ? (int) old('asset_id_2') : null" wire:key="maintenance-asset-select-section2" />
                         @error('asset_id_2')<p class="mt-1 text-sm font-semibold text-red-600">{{ $message }}</p>@enderror
+                    </div>
+                    <div class="md:col-span-2">
+                        <livewire:searchable-select type="vendor" name="vendor_id_2" label="Vendor / Pelaksana (opsional)" placeholder="Cari nama vendor..." :selected="old('vendor_id_2') ? (int) old('vendor_id_2') : null" wire:key="maintenance-vendor-select-section2" />
                     </div>
                     <div class="md:col-span-2">
                         <label for="jenis_pekerjaan_2" class="mb-2 block font-display text-sm uppercase tracking-widest">Jenis Pekerjaan</label>
@@ -203,7 +248,7 @@
     </div>
 
     <script>
-        // Trigger file input click ONLY when clicking placeholder, not other elements
+        // Trigger file input click when upload area clicked
         function triggerFileClick(inputId) {
             console.log('🖱️ Click triggered on upload area:', inputId);
             const input = document.getElementById(inputId);
