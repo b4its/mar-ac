@@ -1,194 +1,167 @@
-<div class="grid gap-4 md:grid-cols-3" data-lokasi-filter>
-    {{-- Gedung --}}
-    <div class="relative" wire:click.outside="$set('openBuilding', false)">
-        <label class="mb-2 block font-display text-sm uppercase tracking-widest">
-            1. Pilih Gedung
-            @if ($buildingId)
-                <span class="ml-1 font-bold normal-case text-emerald-600">✓</span>
-            @endif
-        </label>
-        <div class="relative">
-            <input
-                type="search"
-                wire:model.live.debounce.250ms="searchBuilding"
-                wire:focus="$set('openBuilding', true)"
-                placeholder="Pilih gedung..."
-                autocomplete="off"
-                class="bauhaus-input pr-11"
-            >
-            <button
-                type="button"
-                wire:click="$set('openBuilding', {{ $openBuilding ? 'false' : 'true' }})"
-                class="absolute right-2 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-100"
-                aria-label="Buka pilihan gedung"
-            >
-                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="m6 9 6 6 6-6" />
-                </svg>
-            </button>
-            @if ($buildingId)
+<div class="space-y-3">
+    <p class="font-display text-xs uppercase tracking-widest text-slate-600 dark:text-slate-400 mb-2">Filter Lokasi</p>
+    
+    {{-- Gedung Select --}}
+    <div class="relative" wire:click.outside="$set('searchBuilding', '')">
+        <label class="mb-1 block font-display text-xs uppercase tracking-widest">Gedung</label>
+        
+        <input
+            type="text"
+            placeholder="Cari gedung..."
+            value="{{ $searchBuilding }}"
+            wire:model.live.debounce.250ms="searchBuilding"
+            autocomplete="off"
+            class="bauhaus-input pr-11"
+        >
+        
+        <button
+            type="button"
+            wire:click="$entangle('openBuilding').toggle()"
+            class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-bauhaus-blue"
+        >
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="m6 9 6 6 6-6"/>
+            </svg>
+        </button>
+        
+        @if($searchBuilding !== '' || ($openBuilding ?? false))
+        <div class="absolute z-40 mt-1 w-full max-h-60 overflow-auto rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-900">
+            @forelse($buildings as $building)
                 <button
                     type="button"
-                    wire:click="clearBuilding"
-                    class="absolute right-9 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-red-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
-                    aria-label="Hapus pilihan gedung"
+                    wire:click="selectBuilding({{ $building->id }})"
+                    class="block w-full px-4 py-2 text-left transition hover:bg-blue-50 dark:hover:bg-slate-800"
                 >
-                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M18 6 6 18M6 6l12 12" />
-                    </svg>
+                    <span class="block text-sm font-semibold">{{ $building->nama_gedung }}</span>
                 </button>
+            @empty
+                <div class="px-4 py-2 text-sm text-slate-500">Tidak ada gedung yang cocok.</div>
+            @endforelse
+            
+            @if(empty($buildings) && empty($searchBuilding))
+                <div class="px-4 py-2 text-sm text-slate-500">Tidak ada gedung tersedia.</div>
             @endif
         </div>
-
-        @if ($openBuilding)
-            <div class="absolute z-30 mt-2 w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-200/70 dark:border-slate-700 dark:bg-slate-900 dark:shadow-black/30">
-                <div class="max-h-72 overflow-y-auto py-1">
-                    @forelse ($this->buildingOptions as $option)
-                        <button
-                            type="button"
-                            wire:click="selectBuilding({{ $option['id'] }})"
-                            class="block w-full px-4 py-3 text-left transition hover:bg-blue-50 dark:hover:bg-slate-800"
-                        >
-                            <span class="block text-sm font-semibold text-slate-900 dark:text-slate-100">{{ $option['label'] }}</span>
-                            @if ($option['description'])
-                                <span class="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">{{ $option['description'] }}</span>
-                            @endif
-                        </button>
-                    @empty
-                        <div class="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">Data tidak ditemukan.</div>
-                    @endforelse
-                </div>
-            </div>
         @endif
     </div>
-
-    {{-- Jurusan --}}
-    <div class="relative" wire:click.outside="$set('openDepartment', false)">
-        <label class="mb-2 block font-display text-sm uppercase tracking-widest">
-            2. Pilih Jurusan
-            @if ($departmentId)
-                <span class="ml-1 font-bold normal-case text-emerald-600">✓</span>
-            @endif
-        </label>
-        <div class="relative">
-            <input
-                type="search"
-                wire:model.live.debounce.250ms="searchDepartment"
-                wire:focus="$set('openDepartment', true)"
-                placeholder="{{ $this->departmentLocked ? 'Pilih gedung terlebih dahulu...' : 'Pilih jurusan...' }}"
-                autocomplete="off"
-                class="bauhaus-input pr-11"
-                @if ($this->departmentLocked) disabled @endif
-            >
-            <button
-                type="button"
-                wire:click="$set('openDepartment', {{ $openDepartment ? 'false' : 'true' }})"
-                class="absolute right-2 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-100"
-                aria-label="Buka pilihan jurusan"
-                @if ($this->departmentLocked) disabled @endif
-            >
-                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="m6 9 6 6 6-6" />
-                </svg>
-            </button>
-            @if ($departmentId)
+    
+    {{-- Jurusan Select --}}
+    <div class="relative" wire:click.outside="$set('searchDepartment', '')">
+        <label class="mb-1 block font-display text-xs uppercase tracking-widest {{ !$buildingId ? 'text-red-500' : '' }}">Jurusan</label>
+        
+        <input
+            type="text"
+            placeholder="{{ $buildingId ? 'Cari jurusan...' : 'Pilih gedung terlebih dahulu' }}"
+            value="{{ $searchDepartment }}"
+            wire:model.live.debounce.250ms="searchDepartment"
+            disabled="{{ !$buildingId }}"
+            autocomplete="off"
+            class="bauhaus-input pr-11 {{ !$buildingId ? 'cursor-not-allowed bg-slate-100 dark:bg-slate-800' : '' }}"
+        >
+        
+        @if($buildingId)
+        <button
+            type="button"
+            wire:click="$entangle('openDepartment').toggle()"
+            class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-bauhaus-blue"
+        >
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="m6 9 6 6 6-6"/>
+            </svg>
+        </button>
+        
+        @if($searchDepartment !== '' || ($openDepartment ?? false))
+        <div class="absolute z-40 mt-1 w-full max-h-60 overflow-auto rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-900">
+            @forelse($departments as $dept)
                 <button
                     type="button"
-                    wire:click="clearDepartment"
-                    class="absolute right-9 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-red-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
-                    aria-label="Hapus pilihan jurusan"
+                    wire:click="selectDepartment({{ $dept->id }})"
+                    class="block w-full px-4 py-2 text-left transition hover:bg-blue-50 dark:hover:bg-slate-800"
                 >
-                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M18 6 6 18M6 6l12 12" />
-                    </svg>
+                    <span class="block text-sm font-semibold">{{ $dept->nama_jurusan }}</span>
+                    <span class="block text-xs text-slate-500">{{ $dept->building?->nama_gedung }}</span>
                 </button>
+            @empty
+                <div class="px-4 py-2 text-sm text-slate-500">Tidak ada jurusan yang cocok.</div>
+            @endforelse
+            
+            @if(empty($departments) && empty($searchDepartment))
+                <div class="px-4 py-2 text-sm text-slate-500">Belum ada jurusan untuk gedung ini.</div>
             @endif
         </div>
-
-        @if ($openDepartment && ! $this->departmentLocked)
-            <div class="absolute z-30 mt-2 w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-200/70 dark:border-slate-700 dark:bg-slate-900 dark:shadow-black/30">
-                <div class="max-h-72 overflow-y-auto py-1">
-                    @forelse ($this->departmentOptions as $option)
-                        <button
-                            type="button"
-                            wire:click="selectDepartment({{ $option['id'] }})"
-                            class="block w-full px-4 py-3 text-left transition hover:bg-blue-50 dark:hover:bg-slate-800"
-                        >
-                            <span class="block text-sm font-semibold text-slate-900 dark:text-slate-100">{{ $option['label'] }}</span>
-                            @if ($option['description'])
-                                <span class="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">{{ $option['description'] }}</span>
-                            @endif
-                        </button>
-                    @empty
-                        <div class="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">Data tidak ditemukan.</div>
-                    @endforelse
-                </div>
-            </div>
+        @endif
         @endif
     </div>
-
-    {{-- Ruangan --}}
-    <div class="relative" wire:click.outside="$set('openRoom', false)">
-        <label class="mb-2 block font-display text-sm uppercase tracking-widest">
-            3. Pilih Ruangan
-            @if ($roomId)
-                <span class="ml-1 font-bold normal-case text-emerald-600">✓</span>
-            @endif
-        </label>
-        <div class="relative">
-            <input
-                type="search"
-                wire:model.live.debounce.250ms="searchRoom"
-                wire:focus="$set('openRoom', true)"
-                placeholder="{{ $this->roomLocked ? ($this->departmentLocked ? 'Pilih gedung terlebih dahulu...' : 'Pilih jurusan terlebih dahulu...') : 'Pilih ruangan...' }}"
-                autocomplete="off"
-                class="bauhaus-input pr-11"
-                @if ($this->roomLocked) disabled @endif
-            >
-            <button
-                type="button"
-                wire:click="$set('openRoom', {{ $openRoom ? 'false' : 'true' }})"
-                class="absolute right-2 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-100"
-                aria-label="Buka pilihan ruangan"
-                @if ($this->roomLocked) disabled @endif
-            >
-                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="m6 9 6 6 6-6" />
-                </svg>
-            </button>
-            @if ($roomId)
+    
+    {{-- Ruangan Select --}}
+    <div class="relative" wire:click.outside="$set('searchRoom', '')">
+        <label class="mb-1 block font-display text-xs uppercase tracking-widest {{ !$departmentId ? 'text-red-500' : '' }}">Ruangan</label>
+        
+        <input
+            type="text"
+            placeholder="{{ $departmentId ? 'Cari ruangan...' : 'Pilih jurusan terlebih dahulu' }}"
+            value="{{ $searchRoom }}"
+            wire:model.live.debounce.250ms="searchRoom"
+            disabled="{{ !$departmentId }}"
+            autocomplete="off"
+            class="bauhaus-input pr-11 {{ !$departmentId ? 'cursor-not-allowed bg-slate-100 dark:bg-slate-800' : '' }}"
+        >
+        
+        @if($departmentId)
+        <button
+            type="button"
+            wire:click="$entangle('openRoom').toggle()"
+            class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-bauhaus-blue"
+        >
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="m6 9 6 6 6-6"/>
+            </svg>
+        </button>
+        
+        @if($searchRoom !== '' || ($openRoom ?? false))
+        <div class="absolute z-40 mt-1 w-full max-h-60 overflow-auto rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-900">
+            @forelse($rooms as $room)
                 <button
                     type="button"
-                    wire:click="clearRoom"
-                    class="absolute right-9 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-red-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
-                    aria-label="Hapus pilihan ruangan"
+                    wire:click="selectRoom({{ $room->id }})"
+                    class="block w-full px-4 py-2 text-left transition hover:bg-blue-50 dark:hover:bg-slate-800"
                 >
-                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M18 6 6 18M6 6l12 12" />
-                    </svg>
+                    <span class="block text-sm font-semibold">{{ $room->nama_ruangan }}</span>
+                    <span class="block text-xs text-slate-500">
+                        {{ $room->department?->nama_jurusan }} · 
+                        {{ $room->department?->building?->nama_gedung }}
+                    </span>
                 </button>
+            @empty
+                <div class="px-4 py-2 text-sm text-slate-500">Tidak ada ruangan yang cocok.</div>
+            @endforelse
+            
+            @if(empty($rooms) && empty($searchRoom))
+                <div class="px-4 py-2 text-sm text-slate-500">Belum ada ruangan di jurusan ini.</div>
             @endif
         </div>
-
-        @if ($openRoom && ! $this->roomLocked)
-            <div class="absolute z-30 mt-2 w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-200/70 dark:border-slate-700 dark:bg-slate-900 dark:shadow-black/30">
-                <div class="max-h-72 overflow-y-auto py-1">
-                    @forelse ($this->roomOptions as $option)
-                        <button
-                            type="button"
-                            wire:click="selectRoom({{ $option['id'] }})"
-                            class="block w-full px-4 py-3 text-left transition hover:bg-blue-50 dark:hover:bg-slate-800"
-                        >
-                            <span class="block text-sm font-semibold text-slate-900 dark:text-slate-100">{{ $option['label'] }}</span>
-                            @if ($option['description'])
-                                <span class="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">{{ $option['description'] }}</span>
-                            @endif
-                        </button>
-                    @empty
-                        <div class="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">Data tidak ditemukan.</div>
-                    @endforelse
-                </div>
-            </div>
+        @endif
         @endif
     </div>
+    
+    {{-- Selected Status & Reset Button --}}
+    @if($buildingId || $departmentId || $roomId)
+    <div class="mt-2 p-3 rounded-lg bg-blue-50 border border-blue-200 dark:bg-blue-950/40 dark:border-blue-900">
+        <p class="text-xs font-semibold text-blue-800 dark:text-blue-200 mb-1">Lokasi Terpilih:</p>
+        <ul class="text-xs space-y-1 text-blue-700 dark:text-blue-300">
+            @if($buildingId)
+            <li>• {{ Building::find($buildingId)?->nama_gedung }}</li>
+            @endif
+            @if($departmentId)
+            <li>• {{ Department::find($departmentId)?->nama_jurusan }} · {{ Building::find(Building::where('id', Department::find($departmentId)->building_id)->id)->nama_gedung ?? '' }}</li>
+            @endif
+            @if($roomId)
+            <li>• {{ Room::find($roomId)?->nama_ruangan }}</li>
+            @endif
+        </ul>
+        <button type="button" wire:click="resetFilters" class="mt-2 text-xs text-red-600 hover:text-red-700 underline">
+            ← Reset Filter
+        </button>
+    </div>
+    @endif
 </div>
