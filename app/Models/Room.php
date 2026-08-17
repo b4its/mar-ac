@@ -8,11 +8,22 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Room extends Model
 {
-    protected $fillable = ['building_id', 'nama_ruangan', 'kode_ruangan', 'keterangan'];
+    protected $fillable = [
+        'department_id',
+        'nama_ruangan', 
+        'kode_ruangan', 
+        'keterangan'
+    ];
 
     public function building(): BelongsTo
     {
-        return $this->belongsTo(Building::class);
+        // Get building through department
+        return $this->belongsTo(Building::class, 'building_id');
+    }
+
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(Department::class);
     }
 
     public function assets(): HasMany

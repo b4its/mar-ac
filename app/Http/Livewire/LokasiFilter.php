@@ -17,19 +17,34 @@ class LokasiFilter extends Component
     public string $searchDepartment = '';
     public string $searchRoom = '';
     
+    public function mount()
+    {
+        // Initialize from session or request
+        if (request()->has('building_id')) {
+            $this->buildingId = (int) request('building_id');
+        }
+        if (request()->has('department_id')) {
+            $this->departmentId = (int) request('department_id');
+        }
+        if (request()->has('room_id')) {
+            $this->roomId = (int) request('room_id');
+        }
+    }
+    
     public function updated($propertyName)
     {
-        // Reset dependent selections when parent changes
         if ($propertyName === 'buildingId') {
             $this->departmentId = null;
             $this->roomId = null;
             $this->searchDepartment = '';
             $this->searchRoom = '';
+            $this->resetDependentData();
         }
         
         if ($propertyName === 'departmentId') {
             $this->roomId = null;
             $this->searchRoom = '';
+            $this->resetDependentData();
         }
     }
 
@@ -38,42 +53,43 @@ class LokasiFilter extends Component
         $query = Building::query();
         
         if ($this->searchBuilding) {
-            $query->where('nama_gedung', 'like', "%{$this->searchBuilding}%");
+            $query->where('nama_gedung', 'like', "%{$this->searchBuilding}%")
+                  ->orWhere('kode_gedung', 'like', "%{$this->searchBuilding}%");
         }
         
-        return $query->orderBy('nama_gedung')->limit(20)->get()->toArray();
+        return $query->orderBy('nama_gedung')->limit(20)->get();
     }
 
     protected function getDepartmentsProperty()
     {
         $query = Department::with('building');
         
-        // Only show departments of selected building
         if ($this->buildingId) {
             $query->where('building_id', $this->buildingId);
         }
         
         if ($this->searchDepartment) {
-            $query->where('nama_jurusan', 'like', "%{$this->searchDepartment}%");
+            $query->where('nama_jurusan', 'like', "%{$this->searchDepartment}%")
+                  ->orWhere('kode_jurusan', 'like', "%{$this->searchDepartment}%");
         }
         
-        return $query->orderBy('nama_jurusan')->limit(20)->get()->toArray();
+        return $query->orderBy('nama_jurusan')->limit(20)->get();
     }
 
     protected function getRoomsProperty()
     {
         $query = Room::with('department');
         
-        // Only show rooms of selected department
         if ($this->departmentId) {
             $query->where('department_id', $this->departmentId);
         }
         
         if ($this->searchRoom) {
-            $query->where('nama_ruangan', 'like', "%{$this->searchRoom}%");
+            $query->where('nama_ruangan', 'like', "%{$this->searchRoom}%")
+                  ->orWhere('kode_ruangan', 'like', "%{$this->searchRoom}%");
         }
         
-        return $query->orderBy('nama_ruangan')->limit(20)->get()->toArray();
+        return $query->orderBy('nama_ruangan')->limit(20)->get();
     }
 
     public function selectBuilding(int $id): void
@@ -127,10 +143,8 @@ class LokasiFilter extends Component
 
     protected function resetDependentData(): void
     {
-        // Clear all cached data
-        $this->properties['buildings'] = null;
-        $this->properties['departments'] = null;
-        $this->properties['rooms'] = null;
+        // Clear cached properties to force refresh
+        $this->boot();
     }
 
     public function render()
