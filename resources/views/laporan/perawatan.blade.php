@@ -13,34 +13,34 @@
             <x-bauhaus.shape type="square" color="yellow" class="absolute -right-6 -top-6 h-12 w-12" />
 
             {{-- Lokasi Filter Section --}}
-            <div class="mb-8">
-                <div class="border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 p-6 shadow-lg">
-                    <h2 class="text-lg font-semibold mb-4 text-slate-900 dark:text-white flex items-center gap-2">
-                        <svg class="h-5 w-5 text-bauhaus-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        </svg>
-                        Pilih Lokasi Alat
-                    </h2>
+            <div class="mb-8 border-2 border-bauhaus-yellow bg-yellow-50 dark:bg-yellow-900/20 rounded-xl p-6 shadow-lg">
+                <h2 class="text-lg font-semibold mb-4 text-slate-900 dark:text-white flex items-center gap-2">
+                    <svg class="h-5 w-5 text-bauhaus-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    🔍 Filter Lokasi (Baru!)
+                </h2>
+                
+                @livewire('lokasi-filter')
+                
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        console.log('✅ Page loaded with location filter');
+                        console.log('📡 Waiting for location-filter-updated events...');
+                    });
                     
-                    @livewire('lokasi-filter')
-                    
-                    <script>
-                        // Listen for location filter updates and update the asset dropdown
-                        document.addEventListener('location-filter-updated', function(event) {
-                            console.log('Location filter updated:', event.detail);
-                            
-                            // Trigger search in asset dropdown
-                            const searchInput = document.querySelector('input[name="asset_id"]');
-                            if (searchInput) {
-                                // Dispatch Livewire event to refresh options
-                                window.dispatchEvent(new CustomEvent('location-changed', {
-                                    detail: event.detail
-                                }));
-                            }
-                        });
-                    </script>
-                </div>
+                    document.addEventListener('location-filter-updated', function(event) {
+                        console.log('📍 Location updated:', event.detail);
+                        
+                        const searchInput = document.querySelector('input[name="asset_id"]');
+                        if (searchInput) {
+                            window.dispatchEvent(new CustomEvent('location-changed', {
+                                detail: event.detail
+                            }));
+                        }
+                    });
+                </script>
             </div>
 
             {{-- Bagian 1 --}}
@@ -250,7 +250,6 @@
     <script>
         // Trigger file input click when upload area clicked
         function triggerFileClick(inputId) {
-            console.log('🖱️ Click triggered on upload area:', inputId);
             const input = document.getElementById(inputId);
             if (input) {
                 input.click();
@@ -260,22 +259,15 @@
 
         // Handle photo upload with preview
         function handlePhotoUpload(input, elementsString) {
-            console.log('📁 File selected');
-            
             const file = input.files && input.files[0];
-            if (!file) {
-                console.warn('⚠️ No file selected');
-                return;
-            }
+            if (!file) return;
             
-            // Validate file type
             if (!file.type.match(/image\/(png|jpg|jpeg|webp)/i)) {
                 alert('❌ File harus berupa gambar PNG, JPG, atau WEBP!');
                 input.value = '';
                 return;
             }
             
-            // Validate file size (5MB)
             if (file.size > 5 * 1024 * 1024) {
                 const fileSizeMB = (file.size / 1024 / 1024).toFixed(2);
                 alert('❌ Ukuran file terlalu besar! Maksimal 5MB (' + fileSizeMB + 'MB detected)');
@@ -283,7 +275,6 @@
                 return;
             }
             
-            // Parse elements string safely
             const elementArray = elementsString.split(',').map(s => s.trim()).filter(s => s);
             if (elementArray.length < 3) {
                 console.error('❌ Invalid element IDs format');
@@ -294,8 +285,6 @@
             const imgId = elementArray[1];
             const removeBtnId = elementArray[2].replace('}', '');
             
-            console.log('🔍 Elements found:', { previewClass, imgId, removeBtnId });
-            
             const reader = new FileReader();
             
             reader.onload = function(e) {
@@ -304,14 +293,7 @@
                     const imgElement = document.getElementById(imgId);
                     const removeBtn = document.getElementById(removeBtnId);
                     
-                    console.log('✅ Element lookup:', {
-                        previewDiv: !!previewDiv,
-                        imgElement: !!imgElement,
-                        removeBtn: !!removeBtn
-                    });
-                    
                     if (imgElement && e.target.result) {
-                        // Revoke previous blob URL to prevent memory leak
                         if (imgElement.src && imgElement.src.startsWith('blob:')) {
                             URL.revokeObjectURL(imgElement.src);
                         }
@@ -321,20 +303,14 @@
                         
                         if (previewDiv) previewDiv.classList.add('hidden');
                         if (removeBtn) removeBtn.classList.remove('hidden');
-                        
-                        console.log('✅ Photo uploaded successfully!');
-                    } else {
-                        throw new Error('Elements not found or no image data');
                     }
                 } catch (error) {
-                    console.error('❌ Error processing image:', error);
                     alert('❌ Error loading image: ' + error.message);
                     input.value = '';
                 }
             };
             
             reader.onerror = function() {
-                console.error('❌ FileReader error');
                 alert('❌ Error reading file. Please try again.');
                 input.value = '';
             };
@@ -342,7 +318,6 @@
             reader.readAsDataURL(file);
         }
         
-        // Update image alt text when caption changes
         function updateImageAlt(input, imgId) {
             const wrap = input.closest('.upload-container');
             if (!wrap) return;
@@ -352,32 +327,17 @@
             
             const caption = input.value.trim();
             img.alt = caption || 'Photo';
-            console.log('✓ Caption updated:', caption);
         }
         
-        // Remove uploaded photo
         function removePhoto(prefix, previewClass) {
-            console.log('🗑️ Removing photo:', prefix);
-            
             const wrap = document.querySelector(`[data-upload-index="${prefix}"]`);
-            if (!wrap) {
-                console.error('❌ Upload container not found for:', prefix);
-                return;
-            }
+            if (!wrap) return;
             
             const input = wrap.querySelector('input[type="file"]');
             const previewDiv = document.getElementById(previewClass);
             const img = wrap.querySelector('img[id^="img_"]');
             const captionInput = wrap.querySelector('[data-caption-input]');
             const removeBtn = document.getElementById('remove_' + prefix);
-            
-            console.log('🔍 Elements:', {
-                input: !!input,
-                previewDiv: !!previewDiv,
-                img: !!img,
-                captionInput: !!captionInput,
-                removeBtn: !!removeBtn
-            });
             
             if (input) input.value = '';
             if (previewDiv) previewDiv.classList.remove('hidden');
@@ -391,11 +351,8 @@
             
             if (captionInput) captionInput.value = '';
             if (removeBtn) removeBtn.classList.add('hidden');
-            
-            console.log('✅ Photo removal complete');
         }
         
-        // Toggle section 2 visibility
         document.getElementById('toggle_section_2')?.addEventListener('click', function() {
             const section2 = document.getElementById('section_2');
             if (section2.classList.contains('hidden')) {
@@ -408,11 +365,7 @@
             }
         });
         
-        // Initialize all photo upload areas on page load
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Maintenance form initialized');
-            
-            // Add drag and drop support
             document.querySelectorAll('.upload-container').forEach(container => {
                 container.addEventListener('dragover', function(e) {
                     e.preventDefault();

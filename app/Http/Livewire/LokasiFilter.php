@@ -41,7 +41,7 @@ class LokasiFilter extends Component
             $query->where('nama_gedung', 'like', "%{$this->searchBuilding}%");
         }
         
-        return $query->orderBy('nama_gedung')->limit(20)->get();
+        return $query->orderBy('nama_gedung')->limit(20)->get()->toArray();
     }
 
     protected function getDepartmentsProperty()
@@ -57,7 +57,7 @@ class LokasiFilter extends Component
             $query->where('nama_jurusan', 'like', "%{$this->searchDepartment}%");
         }
         
-        return $query->orderBy('nama_jurusan')->limit(20)->get();
+        return $query->orderBy('nama_jurusan')->limit(20)->get()->toArray();
     }
 
     protected function getRoomsProperty()
@@ -73,7 +73,7 @@ class LokasiFilter extends Component
             $query->where('nama_ruangan', 'like', "%{$this->searchRoom}%");
         }
         
-        return $query->orderBy('nama_ruangan')->limit(20)->get();
+        return $query->orderBy('nama_ruangan')->limit(20)->get()->toArray();
     }
 
     public function selectBuilding(int $id): void
