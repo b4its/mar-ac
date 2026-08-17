@@ -145,7 +145,7 @@
                     <td colspan="2" class="center"><b>Material / Suku Cadang</b></td>
                 </tr>
                 <tr class="center material-row">
-                    <td colspan="7" rowspan="2" class="work-cell">{{ filled($section['uraian']) && $section['uraian'] !== '' ? $section['uraian'] : '' }}</td>
+                    <td colspan="7" rowspan="3" class="work-cell">{{ filled($section['uraian']) && $section['uraian'] !== '' ? $section['uraian'] : '' }}</td>
                     <td>Kode Alat</td>
                     <td>Harga (Rp.)</td>
                 </tr>
@@ -154,39 +154,34 @@
                     <td>&nbsp;</td>
                 </tr>
                 <tr class="center">
-                    <td></td>
-                    <td>Pelaksana</td>
-                    <td colspan="5">Pemeriksa</td>
+                    <td colspan="2">Pelaksana</td>
+                    <td colspan="4">Pemeriksa</td>
                     <td colspan="2">B i a y a</td>
                 </tr>
                 <tr class="center">
                     <td>Nama</td>
                     <td>{{ $field('pelaksana_nama', $report->vendor?->nama_vendor ?: $report->pelaporUser?->name) }}</td>
-                    <td colspan="3"></td>
-                    <td>{{ $field('pemeriksa_nama', $report->verifikatorUser?->name ?: '') }}</td>
-                    <td>{{ $field('mengetahui_nama', $report->approverUser?->name ?: '') }}</td>
+                    <td colspan="2">{{ $field('pemeriksa_nama', $report->verifikatorUser?->name ?: '') }}</td>
+                    <td colspan="2">{{ $field('mengetahui_nama', $report->approverUser?->name ?: '') }}</td>
                     <td colspan="2" rowspan="4" class="cost-cell">Rp {{ number_format($section['biaya_jasa'], 0, ',', '.') }},-</td>
                 </tr>
                 <tr class="center">
                     <td>Jabatan</td>
                     <td>Teknisi</td>
-                    <td colspan="3">Ka.Sub/Ka.Jur/Ka.Lab/Ka.Beng/Ka.Unit</td>
-                    <td>Teknisi</td>
-                    <td>Ka. UPA.PP</td>
+                    <td colspan="2">Ka.Sub/Ka.Jur/Ka.Lab/Ka.Beng/Ka.Unit</td>
+                    <td colspan="2">Ka. UPA.PP</td>
                 </tr>
                 <tr class="center">
                     <td>Tanggal</td>
                     <td>{{ $section['tanggal_pelaksanaan']?->format('d-m-Y') }}</td>
-                    <td colspan="3"></td>
-                    <td></td>
-                    <td></td>
+                    <td colspan="2">{{ $report->verified_at?->format('d-m-Y') ?: '' }}</td>
+                    <td colspan="2">{{ $report->approved_at?->format('d-m-Y') ?: '' }}</td>
                 </tr>
                 <tr class="center signature-space">
                     <td>Paraf</td>
                     <td></td>
-                    <td colspan="3"></td>
-                    <td></td>
-                    <td></td>
+                    <td colspan="2"></td>
+                    <td colspan="2"></td>
                 </tr>
             </table>
         </div>
