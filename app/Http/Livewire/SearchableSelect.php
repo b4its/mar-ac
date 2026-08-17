@@ -21,7 +21,7 @@ class SearchableSelect extends Component
     public bool $open = false;
     public bool $exactMatch = false;
     
-    // Location lock state
+    // Location lock state  
     public bool $locationLocked = false;
     
     public function mount(string $type, string $name, ?string $label = null, string $placeholder = '', int $selectedId = 0, bool $required = false): void
@@ -32,6 +32,7 @@ class SearchableSelect extends Component
         $this->placeholder = $placeholder;
         $this->selectedId = $selectedId;
         $this->required = $required;
+        $this->locationLocked = false; // Initialize explicitly
         
         // Check if user has permission to create
         $userCanCreate = auth()->check() && auth()->user()->hasRole('admin');
@@ -40,17 +41,6 @@ class SearchableSelect extends Component
             // For non-admin users, disable creating option entirely
             $this->placeholder .= ' (hanya dapat memilih yang sudah tersedia)';
         }
-    }
-
-    #[On('location-filter-updated')]
-    public function updateLocation(array $filters): void
-    {
-        if (! isset($filters['building_id'], $filters['department_id'], $filters['room_id'])) {
-            return;
-        }
-        
-        $this->locationLocked = true;
-        $this->locationLockMessage = 'Silakan pilih alat pada lokasi ini.';
     }
 
     protected function getOptionsQuery(): Builder
