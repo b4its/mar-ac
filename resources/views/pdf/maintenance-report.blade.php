@@ -96,25 +96,27 @@
             </tr>
             @if (filled($section['uraian']) && $section['uraian'] !== '-')
                 <tr>
-                    <td colspan="7">{{ $section['uraian'] }}</td>
+                    <td colspan="9">{{ $section['uraian'] }}</td>
                 </tr>
             @endif
             <tr>
-                <td colspan="9" class="center big-space">Material / Suku Cadang</td>
-            </tr>
-            <tr>
-                <td colspan="7"></td>
-                <td colspan="2" class="center">Kode | Harga</td>
+                <td colspan="9" class="center" style="background: #f0f0f0; font-weight: bold;">MATERIAL / SUKU CADANG</td>
             </tr>
             @if (!empty($section['material']))
                 <tr>
-                    <td colspan="7"></td>
-                    <td colspan="2">{{ $section['material'] }}<br>{{ $section['kode_material'] }}<br>Rp {{ number_format($section['biaya'], 0, ',', '.') }}</td>
+                    <td colspan="4"></td>
+                    <td>KODE ALAT</td>
+                    <td>HARGA</td>
+                </tr>
+                <tr>
+                    <td colspan="4">{{ $section['material'] }}</td>
+                    <td>{{ $section['kode_material'] ?: '-' }}</td>
+                    <td>Rp {{ number_format($section['biaya'], 0, ',', '.') }}</td>
                 </tr>
             @endif
             <tr>
-                <td colspan="7" class="right">Biaya Jasa</td>
-                <td colspan="2" class="center">Rp {{ number_format($section['biaya_jasa'], 0, ',', '.') }}</td>
+                <td colspan="6" class="right">Biaya Jasa</td>
+                <td colspan="3" class="center">Rp {{ number_format($section['biaya_jasa'], 0, ',', '.') }}</td>
             </tr>
             
             {{-- Garis pemisah antar alat/mesin --}}
