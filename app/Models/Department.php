@@ -13,4 +13,14 @@ class Department extends Model
     {
         return $this->hasMany(Asset::class);
     }
+
+    public function building()
+    {
+        return $this->belongsTo(Building::class);
+    }
+
+    public function rooms(): HasMany
+    {
+        return $this->hasMany(Room::class);
+    }
 }
